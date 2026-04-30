@@ -146,35 +146,79 @@ router.post('/api/nursing/triage', requireAuth, async (req, res) => {
 
 // NURSING EXECUTION LOOP (Flowsheets & Tasks)
 // ===== NURSING EXECUTION LOOP =====
-router.post('/api/nursing/flowsheets', requireAuth, async (req, res) => {
+
+// 1. Task Management
+router.get('/api/nursing/tasks/:dept_id', requireAuth, async (req, res) => {
     try {
-        const { patient_id, gcs_score, pain_scale, io_balance } = req.body;
-        // Check for critical alerts
-        if (parseInt(gcs_score) <= 8 || parseInt(pain_scale) >= 8) {
-            emitClinicalAlert(patient_id, {
-                type: 'urgent',
-                time: 'الآن',
-                text: `🚨 تنبيه حرج: مقياس غلاسكو (GCS) ${gcs_score} ومستوى الألم ${pain_scale}/10 للمريض #${patient_id}. تدخل فوري مطلوب!`
-            });
-        }
-        res.json({ success: true, message: 'Flowsheet updated' });
+        const { dept_id } = req.params;
+        // Fetch all pending/in-progress tasks
+        const tasks = (await pool.query(`
+            SELECT t.*, p.name_en as patient_name, p.name_ar as patient_name_ar 
+            FROM nursing_tasks t 
+            LEFT JOIN patients p ON t.patient_id = p.id
+            WHERE t.specialty_id = $1 AND t.status IN ('Pending', 'In-Progress')
+            ORDER BY t.created_at DESC
+        `, [dept_id])).rows;
+        res.json(tasks);
     } catch (e) { res.status(500).json({ error: 'Server error' }); }
 });
 
-router.put('/api/nursing/orders/:id/collect', requireAuth, async (req, res) => {
+router.patch('/api/nursing/tasks/:id/status', requireAuth, async (req, res) => {
     try {
-        const orderId = req.params.id;
-        await pool.query("UPDATE lab_radiology_orders SET status='Sample Collected' WHERE id=$1", [orderId]);
-        const order = (await pool.query("SELECT * FROM lab_radiology_orders WHERE id=$1", [orderId])).rows[0];
+        const { id } = req.params;
+        const { status } = req.body;
         
-        if (order) {
-            emitClinicalAlert(order.patient_id, {
+        let query = 'UPDATE nursing_tasks SET status=$1';
+        const params = [status, id];
+        
+        if (status === 'Completed') {
+            query += ', completion_time=CURRENT_TIMESTAMP';
+        }
+        query += ' WHERE task_id=$2 RETURNING *';
+        
+        const result = await pool.query(query, params);
+        const task = result.rows[0];
+        
+        if (task && status === 'Completed') {
+            // Notify doctor
+            // Assuming doctor ID is tied to the original order, but here we broadcast to a general doctor room or emit event
+            emitClinicalAlert(task.patient_id, {
                 type: 'success',
                 time: 'الآن',
-                text: `💉 تم سحب العينة لطلب (${order.order_type}) من قبل التمريض.`
+                text: `✅ تم إنجاز المهمة: ${task.task_name} للمريض #${task.patient_id} بواسطة التمريض.`,
+                taskId: task.task_id
             });
         }
-        res.json({ success: true, order });
+        res.json({ success: true, task });
+    } catch (e) { res.status(500).json({ error: 'Server error' }); }
+});
+
+// 2. Flowsheet Entry
+router.post('/api/nursing/flowsheet/entry', requireAuth, async (req, res) => {
+    try {
+        const { patient_id, parameter_type, parameter_value, unit } = req.body;
+        const nurse_id = req.session.user?.id || 1;
+        
+        let is_critical = false;
+        const valueNum = parseFloat(parameter_value);
+        
+        if (parameter_type === 'GCS' && valueNum <= 8) is_critical = true;
+        if (parameter_type === 'Pain_Scale' && valueNum >= 8) is_critical = true;
+        
+        const result = await pool.query(`
+            INSERT INTO clinical_flowsheets (patient_id, nurse_id, parameter_type, parameter_value, unit, is_critical)
+            VALUES ($1, $2, $3, $4, $5, $6) RETURNING *
+        `, [patient_id, nurse_id, parameter_type, parameter_value, unit || '', is_critical]);
+        
+        if (is_critical) {
+            emitClinicalAlert(patient_id, {
+                type: 'urgent',
+                time: 'الآن',
+                text: `🚨 تنبيه حرج: ${parameter_type} = ${parameter_value} للمريض #${patient_id}. تدخل فوري مطلوب!`
+            });
+        }
+        
+        res.json({ success: true, entry: result.rows[0], is_critical });
     } catch (e) { res.status(500).json({ error: 'Server error' }); }
 });
 
