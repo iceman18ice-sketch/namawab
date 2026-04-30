@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executive Hub - NAMA Medical ERP</title>
+    <!-- Tailwind CSS (V3) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1E1B4B',
+                        secondary: '#312E81',
+                        accent: '#4F46E5',
+                        success: '#10B981',
+                        warning: '#F59E0B',
+                        danger: '#EF4444'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js 4.x -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+        }
+        
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            border-radius: 1rem;
+        }
+
+        .kpi-card {
+            background: linear-gradient(145deg, rgba(49, 46, 129, 0.6) 0%, rgba(30, 27, 75, 0.8) 100%);
+            border-top: 1px solid rgba(79, 70, 229, 0.4);
+            transition: transform 0.3s ease;
+        }
+        .kpi-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .glass-btn {
+            background: rgba(79, 70, 229, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+        }
+        .glass-btn:hover {
+            background: rgba(79, 70, 229, 1);
+        }
+
+        .nphies-status-Submitted { color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+        .nphies-status-Approved { color: #10b981; background: rgba(16, 185, 129, 0.1); }
+        .nphies-status-Rejected { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+    </style>
+</head>
+<body class="p-4 md:p-6 lg:p-8">
+
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row justify-between items-center mb-8 glass-panel p-5 gap-4">
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-accent to-purple-500 flex items-center justify-center text-2xl shadow-lg">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <div>
+                <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">المركز التنفيذي - Executive Hub</h1>
+                <p class="text-sm text-gray-400">دورة الإيرادات والأداء المالي | Revenue Cycle Management & Performance | <span id="clock" class="text-blue-300"></span></p>
+            </div>
+        </div>
+        <div class="flex gap-4">
+            <button onclick="fetchDashboardData()" class="glass-btn px-6 py-2 rounded-lg font-semibold transition shadow-lg flex items-center gap-2">
+                <i class="fa-solid fa-sync"></i> تحديث البيانات (Refresh)
+            </button>
+        </div>
+    </header>
+
+    <!-- Top KPIs -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="glass-panel kpi-card p-5 rounded-xl flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-sack-dollar"></i>
+            </div>
+            <div>
+                <p class="text-sm text-gray-400">إجمالي الإيرادات (Total Revenue)</p>
+                <h3 class="text-2xl font-bold" id="kpiTotalRev">0.00</h3>
+            </div>
+        </div>
+        <div class="glass-panel kpi-card p-5 rounded-xl flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-warning/20 text-warning flex items-center justify-center text-xl">
+                <i class="fa-solid fa-file-invoice"></i>
+            </div>
+            <div>
+                <p class="text-sm text-gray-400">مطالبات معلقة (Pending Claims)</p>
+                <h3 class="text-2xl font-bold" id="kpiPendingClaims">0</h3>
+            </div>
+        </div>
+        <div class="glass-panel kpi-card p-5 rounded-xl flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-success/20 text-success flex items-center justify-center text-xl">
+                <i class="fa-solid fa-check-double"></i>
+            </div>
+            <div>
+                <p class="text-sm text-gray-400">فواتير مدفوعة (Paid Invoices)</p>
+                <h3 class="text-2xl font-bold" id="kpiPaidInvoices">0</h3>
+            </div>
+        </div>
+        <div class="glass-panel kpi-card p-5 rounded-xl flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-bed-pulse"></i>
+            </div>
+            <div>
+                <p class="text-sm text-gray-400">متوسط مدة الإقامة (ALOS)</p>
+                <h3 class="text-2xl font-bold">2.4 أيام (Days)</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Main Revenue Chart -->
+        <div class="glass-panel p-5 lg:col-span-2">
+            <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-chart-area text-accent"></i> مسار الإيرادات اليومي (Daily Revenue Trend)
+            </h2>
+            <div class="relative h-72 w-full">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Department Doughnut -->
+        <div class="glass-panel p-5 lg:col-span-1">
+            <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-pie-chart text-purple-400"></i> الإيرادات حسب القسم (Revenue by Dept)
+            </h2>
+            <div class="relative h-64 w-full flex justify-center">
+                <canvas id="deptChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- NPHIES Claims Management -->
+    <div class="glass-panel p-5">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold flex items-center gap-2">
+                <i class="fa-solid fa-shield-heart text-success"></i> إدارة مطالبات التأمين (NPHIES Claims)
+            </h2>
+            <div class="flex gap-3">
+                <button onclick="generateZatcaInvoice()" class="glass-btn bg-emerald-600/80 hover:bg-emerald-600 px-4 py-2 rounded-lg text-sm transition">
+                    <i class="fa-solid fa-qrcode mr-1"></i> إصدار فاتورة ضريبية (ZATCA Invoice)
+                </button>
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse" dir="ltr">
+                <thead>
+                    <tr class="border-b border-gray-700 text-gray-400 text-sm">
+                        <th class="pb-3 pl-2">رقم (TX ID)</th>
+                        <th class="pb-3">المريض (Patient)</th>
+                        <th class="pb-3">الخدمة (Service)</th>
+                        <th class="pb-3">المبلغ (Amount)</th>
+                        <th class="pb-3">حالة نفيس (NPHIES)</th>
+                        <th class="pb-3 text-center">إجراء (Action)</th>
+                    </tr>
+                </thead>
+                <tbody id="claimsTableBody" class="text-sm divide-y divide-gray-800">
+                    <!-- Dynamic Rows -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal for ZATCA Invoice Demo -->
+    <div id="zatcaModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden opacity-0 transition-opacity" dir="ltr">
+        <div class="glass-panel bg-slate-900 p-8 rounded-2xl w-full max-w-md mx-4 transform scale-95 transition-transform" id="zatcaModalContent">
+            <div class="flex justify-between items-start mb-6">
+                <h3 class="text-xl font-bold text-success"><i class="fa-solid fa-file-invoice-dollar mr-2"></i> الفاتورة الضريبية (ZATCA Invoice)</h3>
+                <button onclick="closeZatcaModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            
+            <div id="zatcaDetails" class="space-y-4">
+                <!-- details -->
+            </div>
+            
+            <div class="mt-8 flex justify-center">
+                <div class="bg-white p-2 rounded-lg">
+                    <!-- Placeholder for QR Code, in real app render actual QR from base64 TLV -->
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=ZATCA_MOCK_QR" alt="ZATCA QR" class="w-32 h-32 rounded">
+                </div>
+            </div>
+            
+            <button onclick="closeZatcaModal()" class="w-full mt-8 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded transition">إغلاق (Close)</button>
+        </div>
+    </div>
+
+    <script>
+        // Clock
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toLocaleString();
+        }, 1000);
+
+        let revenueChartInst = null;
+        let deptChartInst = null;
+
+        async function fetchDashboardData() {
+            try {
+                // Fetch Dashboard Metrics
+                const res = await fetch('/api/finance/dashboard');
+                const data = await res.json();
+
+                if (data.metrics) {
+                    document.getElementById('kpiTotalRev').innerText = data.metrics.totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 2});
+                    document.getElementById('kpiPendingClaims').innerText = data.metrics.pendingClaims;
+                    document.getElementById('kpiPaidInvoices').innerText = data.metrics.paidInvoices;
+                }
+
+                renderCharts(data.dailyRevenue, data.revenueByDept);
+                fetchClaims();
+            } catch (err) {
+                console.error("Failed to load dashboard data", err);
+            }
+        }
+
+        async function fetchClaims() {
+            try {
+                const res = await fetch('/api/finance/claims');
+                const claims = await res.json();
+                
+                const tbody = document.getElementById('claimsTableBody');
+                if (claims.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">No pending claims found</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = claims.map(c => `
+                    <tr class="hover:bg-slate-800/50 transition">
+                        <td class="py-3 pl-2 text-gray-400">#${c.transaction_id}</td>
+                        <td class="py-3 font-semibold">${c.patient_name || 'Patient ' + c.patient_id}</td>
+                        <td class="py-3">${c.service_name || c.service_code}</td>
+                        <td class="py-3 font-mono">${parseFloat(c.amount).toFixed(2)}</td>
+                        <td class="py-3">
+                            <span class="px-2 py-1 rounded text-xs font-bold nphies-status-${c.nphies_status.replace(/\s+/g,'')}">
+                                ${c.nphies_status}
+                            </span>
+                        </td>
+                        <td class="py-3 text-center">
+                            ${c.nphies_status === 'Not Submitted' || c.nphies_status === 'Rejected' ? 
+                            `<button onclick="submitToNPHIES(${c.transaction_id})" class="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded transition">
+                                <i class="fa-solid fa-paper-plane mr-1"></i> Submit
+                            </button>` 
+                            : `<span class="text-gray-500 text-xs"><i class="fa-solid fa-spinner fa-spin"></i> Processing</span>`}
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function submitToNPHIES(transactionId) {
+            try {
+                const res = await fetch('/api/finance/submit-nphies', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ transaction_id: transactionId })
+                });
+                if(res.ok) {
+                    // Refresh after a short delay to show 'Submitted' state
+                    fetchClaims();
+                    // Poll after 2.5s to see the 'Approved/Rejected' result from the mock delay
+                    setTimeout(fetchClaims, 2500);
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function generateZatcaInvoice() {
+            // For demo, just pass patient_id 1 (assume we have billed transactions for them)
+            // In a real app, this would be context-aware
+            const patientId = prompt("Enter Patient ID to generate ZATCA Final Invoice:", "1");
+            if (!patientId) return;
+
+            try {
+                const res = await fetch('/api/finance/zatca-invoice', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ patient_id: patientId })
+                });
+                const data = await res.json();
+
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+
+                if (data.success && data.invoice) {
+                    // Show modal
+                    const modal = document.getElementById('zatcaModal');
+                    const content = document.getElementById('zatcaModalContent');
+                    
+                    document.getElementById('zatcaDetails').innerHTML = `
+                        <div class="flex justify-between border-b border-gray-700 pb-2"><span class="text-gray-400">Invoice No:</span> <span class="font-bold">${data.invoice.invoice_number}</span></div>
+                        <div class="flex justify-between border-b border-gray-700 pb-2"><span class="text-gray-400">Subtotal:</span> <span>${data.invoice.total_amount.toFixed(2)} SAR</span></div>
+                        <div class="flex justify-between border-b border-gray-700 pb-2"><span class="text-gray-400">VAT (15%):</span> <span>${data.invoice.vat_amount.toFixed(2)} SAR</span></div>
+                        <div class="flex justify-between pt-2"><span class="text-lg font-bold text-success">Grand Total:</span> <span class="text-lg font-bold">${data.invoice.grand_total.toFixed(2)} SAR</span></div>
+                    `;
+
+                    modal.classList.remove('hidden');
+                    // Trigger animation
+                    setTimeout(() => {
+                        modal.classList.remove('opacity-0');
+                        content.classList.remove('scale-95');
+                    }, 10);
+
+                    // Refresh dashboard to reflect paid status
+                    fetchDashboardData();
+                }
+            } catch (e) {
+                alert('Server connection error');
+            }
+        }
+
+        function closeZatcaModal() {
+            const modal = document.getElementById('zatcaModal');
+            const content = document.getElementById('zatcaModalContent');
+            
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function renderCharts(dailyData, deptData) {
+            Chart.defaults.color = '#94a3b8';
+            Chart.defaults.font.family = "'Inter', sans-serif";
+
+            // Revenue Area Chart
+            const revCtx = document.getElementById('revenueChart').getContext('2d');
+            if(revenueChartInst) revenueChartInst.destroy();
+            
+            const gradient = revCtx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(79, 70, 229, 0.5)');
+            gradient.addColorStop(1, 'rgba(79, 70, 229, 0.0)');
+
+            revenueChartInst = new Chart(revCtx, {
+                type: 'line',
+                data: {
+                    labels: dailyData ? dailyData.map(d => new Date(d.date).toLocaleDateString()) : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Revenue (SAR)',
+                        data: dailyData ? dailyData.map(d => parseFloat(d.total)) : [1200, 1900, 3000, 2500, 4200, 3800, 5100],
+                        borderColor: '#4F46E5',
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#4F46E5',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // Department Doughnut
+            const deptCtx = document.getElementById('deptChart').getContext('2d');
+            if(deptChartInst) deptChartInst.destroy();
+            
+            const deptLabels = deptData && deptData.length ? deptData.map(d => d.department || 'Other') : ['Cardiology', 'ICU', 'Radiology', 'Laboratory'];
+            const deptValues = deptData && deptData.length ? deptData.map(d => parseFloat(d.revenue)) : [40, 25, 20, 15];
+
+            deptChartInst = new Chart(deptCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: deptLabels,
+                    datasets: [{
+                        data: deptValues,
+                        backgroundColor: [
+                            '#4F46E5', // Indigo
+                            '#10B981', // Emerald
+                            '#F59E0B', // Amber
+                            '#EC4899', // Pink
+                            '#3B82F6'  // Blue
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } }
+                    }
+                }
+            });
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', fetchDashboardData);
+    </script>
+</body>
+</html>
