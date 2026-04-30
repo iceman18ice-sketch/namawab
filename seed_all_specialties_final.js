@@ -32,10 +32,10 @@ const masterSpecialties = [
     "Cosmetic Dermatology", "Medical Dermatology", "Immunodermatology", "Trichology", "Teledermatology",
     "Ophthalmology", "Cornea and External Disease", "Glaucoma", "Neuro-Ophthalmology", "Ophthalmic Pathology",
     "Ophthalmic Plastic Surgery", "Pediatric Ophthalmology", "Retina and Vitreous", "Uveitis", "Refractive Surgery",
-    "Otolaryngology (ENT)", "Otology/Neurotology", "Pediatric Otolaryngology", "Head and Neck Surgery", "Facial Plastic Surgery",
-    "Rhinology", "Laryngology", "Thyroid/Parathyroid Surgery", "Sleep Medicine (ENT)", "Allergy (ENT)",
+    "Otolaryngology", "Otology", "Pediatric Otolaryngology", "Head and Neck Surgery", "Facial Plastic Surgery",
+    "Rhinology", "Laryngology", "Thyroid Surgery", "Sleep Medicine ENT", "Allergy ENT",
     "Anesthesiology", "Cardiothoracic Anesthesiology", "Critical Care Anesthesiology", "Obstetric Anesthesiology", "Pediatric Anesthesiology",
-    "Neuroanesthesiology", "Pain Medicine (Anesthesiology)", "Regional Anesthesiology", "Hospice and Palliative Anesthesiology", "Dental Anesthesiology",
+    "Neuroanesthesiology", "Pain Medicine Anesthesiology", "Regional Anesthesiology", "Hospice Anesthesiology", "Dental Anesthesiology",
     "Pathology", "Blood Banking", "Chemical Pathology", "Cytopathology", "Forensic Pathology",
     "Hematopathology", "Medical Microbiology", "Molecular Genetic Pathology", "Neuropathology", "Pediatric Pathology",
     "Emergency Medicine", "Medical Toxicology", "Undersea Medicine", "Wilderness Medicine", "Observation Medicine",
@@ -43,10 +43,10 @@ const masterSpecialties = [
     "Radiology", "Diagnostic Radiology", "Interventional Radiology", "Neuroradiology", "Nuclear Medicine",
     "Pediatric Radiology", "Musculoskeletal Radiology", "Breast Imaging", "Cardiothoracic Radiology", "Gastrointestinal Radiology",
     "Urology", "Pediatric Urology", "Urologic Oncology", "Female Pelvic Medicine", "Male Infertility",
-    "Calculi (Stone Disease)", "Neurourology", "Renal Transplantation", "Erectile Dysfunction", "Endourology",
-    "Physical Medicine", "Spinal Cord Injury Medicine", "Brain Injury Medicine", "Sports Medicine (PM&R)", "Neuromuscular Medicine (PM&R)",
-    "Pediatric Rehabilitation", "Pain Medicine (PM&R)", "Amputee Rehabilitation", "Cardiopulmonary Rehabilitation", "Occupational Rehabilitation",
-    "Preventive Medicine", "Public Health", "Occupational Medicine", "Addiction Medicine", "Medical Toxicology (Preventive)",
+    "Calculi", "Neurourology", "Renal Transplantation", "Erectile Dysfunction", "Endourology",
+    "Physical Medicine", "Spinal Cord Injury Medicine", "Brain Injury Medicine", "Sports Medicine PMR", "Neuromuscular Medicine PMR",
+    "Pediatric Rehabilitation", "Pain Medicine PMR", "Amputee Rehabilitation", "Cardiopulmonary Rehabilitation", "Occupational Rehabilitation",
+    "Preventive Medicine", "Public Health", "Occupational Medicine", "Addiction Medicine Prev", "Medical Toxicology Prev",
     "Clinical Informatics", "Lifestyle Medicine", "Medical Genetics", "Clinical Biochemical Genetics", "Clinical Cytogenetics",
     "Molecular Imaging", "In Vivo Nuclear Medicine", "In Vitro Nuclear Medicine", "Nuclear Cardiology", "Nuclear Oncology",
     "Radiation Oncology", "Brachytherapy", "Proton Therapy", "Stereotactic Radiosurgery", "Intraoperative Radiation Therapy",
@@ -61,13 +61,7 @@ const masterSpecialties = [
     "Stem Cell Therapy", "Tissue Engineering", "Biomaterials in Medicine", "Artificial Organs", "Bionics"
 ];
 
-// Helper to shuffle array
-function shuffle(array) {
-    return array.sort(() => Math.random() - 0.5);
-}
-
-// Generate realistic looking data
-function generateDiagnoses(specialtyName, count) {
+function generateDiagnoses(specialtyName, count, specId) {
     const conditions = ["Acute", "Chronic", "Malignant", "Benign", "Congenital", "Idiopathic", "Primary", "Secondary"];
     const types = ["Syndrome", "Disease", "Disorder", "Inflammation", "Infection", "Failure", "Deficiency"];
     const results = [];
@@ -77,77 +71,67 @@ function generateDiagnoses(specialtyName, count) {
         const codeNum = Math.floor(Math.random()*900)+100;
         const codeChar = String.fromCharCode(65 + Math.floor(Math.random() * 26));
         results.push({
-            icd_code: `${codeChar}${codeNum}.${Math.floor(Math.random()*9)}`,
+            icd_code: `${codeChar}${codeNum}.${Math.floor(Math.random()*9)}-${specId.substring(0,3)}`,
             name_en: `${cnd} ${specialtyName} ${typ} ${i+1}`,
-            name_ar: `اضطراب ${specialtyName} ${cnd === 'Acute' ? 'الحاد' : 'المزمن'} - ${i+1}`,
-            is_chronic: (cnd === 'Chronic' || cnd === 'Congenital'),
-            is_recommended: true
+            name_ar: `اضطراب ${specialtyName} ${cnd === 'Acute' ? 'الحاد' : 'المزمن'} - ${i+1}`
         });
     }
     return results;
 }
 
-function generateLabs(specialtyName, count) {
+function generateLabs(specialtyName, count, specId) {
     const testTypes = ["Panel", "Antibody", "Level", "Screen", "Culture", "Profile", "Assay"];
     const results = [];
     for(let i=0; i<count; i++) {
         const tt = testTypes[Math.floor(Math.random() * testTypes.length)];
         results.push({
-            test_code: `LAB-${specialtyName.substring(0,3).toUpperCase()}-${Math.floor(Math.random()*9000)}`,
-            test_name: `Specialized ${specialtyName} ${tt} ${i+1}`,
-            is_recommended: true
+            name: `Specialized ${specialtyName} ${tt} ${i+1}`,
+            category: specialtyName
         });
     }
-    // Add some generics
-    results.push(
-        { test_code: 'LAB-CBC', test_name: 'Complete Blood Count', is_recommended: true },
-        { test_code: 'LAB-BMP', test_name: 'Basic Metabolic Panel', is_recommended: true }
-    );
     return results;
 }
 
 function generateRadiology(specialtyName, count) {
-    const modalities = ["X-Ray", "MRI", "CT Scan", "Ultrasound", "PET Scan", "Fluoroscopy"];
+    const modalities = ["X-Ray", "MRI", "CT", "Ultrasound", "PET", "Fluoroscopy"];
     const regions = ["Abdomen", "Pelvis", "Chest", "Brain", "Spine", "Extremity", "Neck", "Whole Body"];
     const results = [];
     for(let i=0; i<count; i++) {
         const mod = modalities[Math.floor(Math.random() * modalities.length)];
         const reg = regions[Math.floor(Math.random() * regions.length)];
         results.push({
-            exam_code: `RAD-${mod.replace(/\s+/g,'').substring(0,3).toUpperCase()}-${Math.floor(Math.random()*9000)}`,
-            exam_name: `${mod} of ${reg} for ${specialtyName} Assessment`,
-            modality: mod,
-            is_recommended: true
+            name: `${mod} of ${reg} for ${specialtyName} Assessment`,
+            modality: mod
         });
     }
     return results;
 }
 
-function generateConsents(specialtyName) {
+function generateConsents(specialtyName, specId) {
     return [
         {
-            template_type: 'General',
-            title_en: `General Consent for ${specialtyName} Treatment`,
+            category: 'General',
+            title_en: `General Consent for ${specialtyName}`,
             title_ar: `إقرار الموافقة العامة لعلاج ${specialtyName}`,
             content_en: `I hereby consent to general procedures and treatments under the specialty of ${specialtyName}.`,
             content_ar: `أقر بموافقتي على الإجراءات والعلاجات العامة تحت تخصص ${specialtyName}.`,
-            requires_signature: true
+            mandatory: true
         },
         {
-            template_type: 'Surgical',
-            title_en: `Surgical / Invasive Procedure Consent for ${specialtyName}`,
-            title_ar: `إقرار عملية جراحية / تدخل جراحي لتخصص ${specialtyName}`,
+            category: 'Surgical',
+            title_en: `Surgical Procedure Consent for ${specialtyName}`,
+            title_ar: `إقرار عملية جراحية لتخصص ${specialtyName}`,
             content_en: `I consent to the invasive procedure as explained by my ${specialtyName} physician.`,
             content_ar: `أقر بموافقتي على الإجراء الجراحي كما شرحه طبيب ${specialtyName}.`,
-            requires_signature: true
+            mandatory: true
         },
         {
-            template_type: 'Anesthesia',
+            category: 'Anesthesia',
             title_en: `High-Risk Consent for ${specialtyName}`,
             title_ar: `إقرار الإجراءات عالية الخطورة لتخصص ${specialtyName}`,
             content_en: `I understand the high risks involved with the specific ${specialtyName} procedure.`,
             content_ar: `أتفهم المخاطر العالية المرتبطة بهذا الإجراء الخاص بتخصص ${specialtyName}.`,
-            requires_signature: true
+            mandatory: true
         }
     ];
 }
@@ -159,90 +143,83 @@ async function run() {
     try {
         await client.query('BEGIN');
         
-        // Ensure tables exist (they should, but just in case)
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS specialties (
-                id SERIAL PRIMARY KEY,
-                name_en VARCHAR(255),
-                name_ar VARCHAR(255),
-                code VARCHAR(50) UNIQUE,
-                status VARCHAR(50) DEFAULT 'Active'
-            )
-        `);
-
-        // We will insert specialties one by one and get their ID
         let count = 0;
         for (const spec of masterSpecialties) {
             count++;
-            const code = spec.replace(/[^A-Za-z]/g, '').substring(0, 8).toUpperCase() + `_${count}`;
+            const specId = spec.replace(/[^A-Za-z]/g, '').substring(0, 15).toUpperCase() + '_' + count;
             
-            let res = await client.query(`SELECT id FROM specialties WHERE code = $1`, [code]);
-            let specialtyId;
+            let res = await client.query(`SELECT specialty_id FROM specialties WHERE name_en = $1`, [spec]);
+            let specialtyId = res.rows[0]?.specialty_id;
             
-            if (res.rows.length === 0) {
-                res = await client.query(`
-                    INSERT INTO specialties (name_en, name_ar, code)
+            if (!specialtyId) {
+                await client.query(`
+                    INSERT INTO specialties (specialty_id, name_en, name_ar)
                     VALUES ($1, $2, $3)
-                    RETURNING id
-                `, [spec, `تخصص ${spec}`, code]);
-                specialtyId = res.rows[0].id;
+                    ON CONFLICT (specialty_id) DO NOTHING
+                `, [specId, spec, `تخصص ${spec}`]);
+                specialtyId = specId;
                 console.log(`[${count}/${masterSpecialties.length}] Created: ${spec}`);
             } else {
-                specialtyId = res.rows[0].id;
                 console.log(`[${count}/${masterSpecialties.length}] Exists: ${spec}`);
             }
 
-            // 1. Generate 40 Diagnoses
-            const diagnoses = generateDiagnoses(spec, 40);
-            for (const d of diagnoses) {
-                await client.query(`
-                    INSERT INTO specialty_diagnoses (specialty_id, icd_code, name_en, name_ar, is_chronic, is_recommended)
-                    VALUES ($1, $2, $3, $4, $5, $6)
-                    ON CONFLICT DO NOTHING
-                `, [specialtyId, d.icd_code, d.name_en, d.name_ar, d.is_chronic ? 1 : 0, d.is_recommended ? 1 : 0]);
+            // 1. Generate 35 Diagnoses
+            const diagnoses = generateDiagnoses(spec, 35, specId);
+            for (const diag of diagnoses) {
+                await client.query('INSERT INTO icd10_codes (code, description_en, description_ar) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING', [diag.icd_code, diag.name_en, diag.name_ar]);
+                await client.query('INSERT INTO specialty_diagnoses (specialty_id, icd10_code) VALUES ($1, $2) ON CONFLICT DO NOTHING', [specialtyId, diag.icd_code]);
             }
 
-            // 2. Generate 25 Labs
-            const labs = generateLabs(spec, 25);
-            for (const l of labs) {
-                await client.query(`
-                    INSERT INTO specialty_labs (specialty_id, test_name, test_code, is_recommended)
-                    VALUES ($1, $2, $3, $4)
-                    ON CONFLICT DO NOTHING
-                `, [specialtyId, l.test_name, l.test_code, l.is_recommended ? 1 : 0]);
+            // 2. Generate 35 Labs
+            const labs = generateLabs(spec, 35, specId);
+            for (const lab of labs) {
+                const existing = await client.query('SELECT id FROM lab_tests_catalog WHERE test_name = $1 LIMIT 1', [lab.name]);
+                let labId;
+                if (existing.rows.length > 0) {
+                    labId = existing.rows[0].id;
+                } else {
+                    const insert = await client.query('INSERT INTO lab_tests_catalog (test_name, category, normal_range) VALUES ($1, $2, $3) RETURNING id', [lab.name, lab.category, 'Normal']);
+                    labId = insert.rows[0].id;
+                }
+                await client.query('INSERT INTO specialty_labs (specialty_id, lab_id) VALUES ($1, $2) ON CONFLICT DO NOTHING', [specialtyId, labId]);
             }
 
-            // 3. Generate 25 Radiology
-            const rads = generateRadiology(spec, 25);
-            for (const r of rads) {
-                await client.query(`
-                    INSERT INTO specialty_radiology (specialty_id, exam_name, exam_code, modality, is_recommended)
-                    VALUES ($1, $2, $3, $4, $5)
-                    ON CONFLICT DO NOTHING
-                `, [specialtyId, r.exam_name, r.exam_code, r.modality, r.is_recommended ? 1 : 0]);
+            // 3. Generate 35 Radiology
+            const rads = generateRadiology(spec, 35);
+            for (const rad of rads) {
+                const existing = await client.query('SELECT id FROM radiology_catalog WHERE exact_name = $1 LIMIT 1', [rad.name]);
+                let radId;
+                if (existing.rows.length > 0) {
+                    radId = existing.rows[0].id;
+                } else {
+                    const insert = await client.query('INSERT INTO radiology_catalog (exact_name, modality) VALUES ($1, $2) RETURNING id', [rad.name, rad.modality]);
+                    radId = insert.rows[0].id;
+                }
+                await client.query('INSERT INTO specialty_radiology (specialty_id, radiology_id) VALUES ($1, $2) ON CONFLICT DO NOTHING', [specialtyId, radId]);
             }
 
             // 4. Generate 3 Consents
-            const consents = generateConsents(spec);
-            for (const c of consents) {
-                await client.query(`
-                    INSERT INTO consent_templates (specialty_id, title_ar, title_en, content_ar, content_en, requires_signature, template_type)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7)
-                    ON CONFLICT DO NOTHING
-                `, [specialtyId, c.title_ar, c.title_en, c.content_ar, c.content_en, c.requires_signature ? 1 : 0, c.template_type]);
+            const consents = generateConsents(spec, specId);
+            for (const consent of consents) {
+                const existing = await client.query('SELECT template_id FROM consent_templates WHERE specialty_id = $1 AND title_en = $2', [specialtyId, consent.title_en]);
+                if (existing.rows.length === 0) {
+                    await client.query(
+                        `INSERT INTO consent_templates (title_ar, title_en, content_ar, content_en, category, specialty_id, is_mandatory) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+                        [consent.title_ar, consent.title_en, consent.content_ar, consent.content_en, consent.category, specialtyId, consent.mandatory ? 1 : 0]
+                    );
+                }
             }
         }
 
         await client.query('COMMIT');
         console.log(`\n✅ Full Master Seeding Completed for ${masterSpecialties.length} Specialties!`);
         
-        // Print Summary for the User
         const countRes = await client.query('SELECT COUNT(*) FROM specialties');
         console.log(`\n📊 Total Specialties in DB: ${countRes.rows[0].count}`);
         
-        const last5 = await client.query('SELECT name_en, code FROM specialties ORDER BY id DESC LIMIT 5');
+        const last5 = await client.query('SELECT name_en, specialty_id FROM specialties ORDER BY specialty_id DESC LIMIT 5');
         console.log(`\n🔍 Last 5 Specialties Created:`);
-        last5.rows.forEach(r => console.log(` - ${r.name_en} (${r.code})`));
+        last5.rows.forEach(r => console.log(` - ${r.name_en} (${r.specialty_id})`));
 
     } catch (err) {
         await client.query('ROLLBACK');
