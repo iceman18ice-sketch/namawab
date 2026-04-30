@@ -24,6 +24,13 @@ router.post('/api/lab/orders', requireAuth, async (req, res) => {
         
         const newOrder = result.rows[0];
         newOrder.item_type = 'lab';
+        
+        // Auto-create a nursing task for this order
+        await pool.query(
+            `INSERT INTO nursing_tasks (patient_id, order_id, specialty_id, task_name) VALUES ($1, $2, $3, $4)`,
+            [patient_id, newOrder.id, 'ICU', `Lab Collection: ${order_type}`]
+        );
+        
         emitNewOrder(newOrder); // Emit the new order!
 
         res.json(newOrder);
@@ -40,6 +47,13 @@ router.post('/api/lab/orders/direct', requireAuth, async (req, res) => {
         );
         const newOrder = r.rows[0];
         newOrder.item_type = 'lab';
+        
+        // Auto-create a nursing task for this order
+        await pool.query(
+            `INSERT INTO nursing_tasks (patient_id, order_id, specialty_id, task_name) VALUES ($1, $2, $3, $4)`,
+            [patient_id || 0, newOrder.id, 'ICU', `Lab Collection: ${order_type}`]
+        );
+        
         emitNewOrder(newOrder); // Emit the new order!
         res.json(newOrder);
     } catch (e) { res.status(500).json({ error: 'Server error' }); }

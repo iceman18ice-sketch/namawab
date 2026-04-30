@@ -1,372 +1,403 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" data-theme="0">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nursing Station - Medical ERP</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/styles.css">
-    <link rel="stylesheet" href="/css/shell-v3.css">
-    <link rel="stylesheet" href="/css/premium-v3.css">
+    <title>محطة التمريض والعناية المركزة - Nursing Execution</title>
+    <!-- Tailwind CSS (V3) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1E40AF',
+                        secondary: '#0F172A',
+                        accent: '#3B82F6',
+                        danger: '#EF4444',
+                        success: '#10B981'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- Socket.io -->
     <script src="/socket.io/socket.io.js"></script>
+    
     <style>
-        :root {
-            --ns-bg: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            --ns-panel: rgba(30, 41, 59, 0.7);
-            --ns-border: rgba(255, 255, 255, 0.1);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent-green: #10b981;
-            --accent-blue: #3b82f6;
-            --accent-red: #ef4444;
-            --accent-yellow: #f59e0b;
-        }
-
         body {
-            margin: 0; padding: 20px;
-            background: var(--ns-bg);
-            color: var(--text-main);
-            font-family: 'Tajawal', sans-serif;
-            height: 100vh;
-            box-sizing: border-box;
-            display: grid;
-            grid-template-columns: 350px 1fr 1fr;
-            gap: 20px;
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: #f8fafc;
+            min-height: 100vh;
         }
-
-        .panel {
-            background: var(--ns-panel);
+        
+        /* Glassmorphism Styles */
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
             backdrop-filter: blur(12px);
-            border: 1px solid var(--ns-border);
-            border-radius: 16px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            border-radius: 1rem;
         }
 
-        .header {
-            padding: 15px 20px;
-            background: rgba(0,0,0,0.2);
-            border-bottom: 1px solid var(--ns-border);
-            font-size: 1.2rem;
-            font-weight: 700;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .body {
-            padding: 20px;
-            overflow-y: auto;
-            flex: 1;
-        }
-
-        /* Patient List */
-        .patient-card {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid transparent;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .patient-card:hover, .patient-card.active {
-            background: rgba(59, 130, 246, 0.15);
-            border-color: var(--accent-blue);
-        }
-
-        /* Task Board */
-        .task-item {
-            background: rgba(0,0,0,0.3);
-            border-right: 4px solid var(--accent-yellow);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .task-item.done {
-            border-color: var(--accent-green);
-            opacity: 0.6;
-        }
-        .btn-action {
-            background: var(--accent-blue);
+        .glass-input {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.2s;
-        }
-        .btn-action:hover { transform: scale(1.05); }
-        .btn-done { background: var(--accent-green); }
-
-        /* Flowsheets */
-        .fs-group { margin-bottom: 20px; }
-        .fs-group label { display: block; margin-bottom: 8px; color: var(--text-muted); }
-        .fs-input {
-            width: 100%;
-            padding: 12px;
-            background: rgba(0,0,0,0.2);
-            border: 1px solid var(--ns-border);
-            border-radius: 8px;
-            color: white;
-            font-size: 1rem;
-            box-sizing: border-box;
-        }
-        .fs-input:focus { border-color: var(--accent-blue); outline: none; }
-
-        .range-container {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .range-val { font-size: 1.5rem; font-weight: bold; width: 40px; text-align: center; }
-
-        input[type=range] { width: 100%; accent-color: var(--accent-blue); }
-
-        .btn-save {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(90deg, var(--accent-blue), #2563eb);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
         }
 
-        .chart-container {
-            margin-top: 20px;
-            height: 150px;
-            background: rgba(0,0,0,0.2);
-            border-radius: 12px;
-            display: flex;
-            align-items: flex-end;
-            padding: 10px;
-            gap: 5px;
+        .glass-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
         }
-        .bar {
-            flex: 1;
-            background: var(--accent-blue);
-            border-radius: 4px 4px 0 0;
-            transition: height 0.5s;
-            position: relative;
-        }
-        .bar.danger { background: var(--accent-red); }
 
-        .live-badge {
-            background: rgba(16, 185, 129, 0.2);
-            color: #6ee7b7;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            display: flex; align-items: center; gap: 5px;
+        /* Toast Animation */
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
-        .live-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 1s infinite; }
+        .toast-enter {
+            animation: slideInRight 0.3s ease-out forwards;
+        }
 
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        /* Critical Pulse */
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .critical-alert {
+            border: 1px solid #ef4444 !important;
+            animation: pulse-red 2s infinite;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
+        ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.5); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.8); }
     </style>
 </head>
-<body>
+<body class="p-4 md:p-6 lg:p-8">
 
-    <!-- Panel 1: Patients -->
-    <div class="panel">
-        <div class="header">
-            <span>👥 العناية المركزة (ICU)</span>
-            <div class="live-badge"><div class="live-dot"></div> متصل</div>
+    <!-- Header -->
+    <header class="flex justify-between items-center mb-8 glass-panel p-4">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-xl shadow-lg">
+                <i class="fa-solid fa-user-nurse"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-l from-blue-400 to-cyan-300">محطة التمريض - Nursing Command</h1>
+                <p class="text-sm text-gray-400">ICU & ER Execution Loop | <span id="clock" class="text-blue-300"></span></p>
+            </div>
         </div>
-        <div class="body" id="patientList">
-            <!-- Simulated Patient -->
-            <div class="patient-card active" onclick="selectPatient(1, 'أحمد محمد عبدالله')">
-                <div style="font-weight:bold; font-size:1.1rem;">أحمد محمد عبدالله</div>
-                <div style="color:var(--text-muted); font-size:0.9rem; margin-top:5px;">سرير: ICU-04 | MRN-9982</div>
-                <div style="margin-top: 10px;">
-                    <span style="background:rgba(239,68,68,0.2); color:#fca5a5; padding:2px 8px; border-radius:10px; font-size:0.8rem;">ألم في الصدر</span>
+        <div class="flex gap-4">
+            <select id="deptSelect" class="glass-input rounded-lg px-4 py-2 text-sm">
+                <option value="ICU">العناية المركزة (ICU)</option>
+                <option value="ER">الطوارئ (ER)</option>
+                <option value="CARDIOLOGY">أمراض القلب (Cardiology)</option>
+            </select>
+            <button class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-lg font-semibold transition shadow-lg shadow-blue-500/30">
+                <i class="fa-solid fa-sync mr-2"></i> Refresh
+            </button>
+        </div>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left Column: Active Task Queue -->
+        <div class="lg:col-span-1 flex flex-col gap-6">
+            <div class="glass-panel p-5 flex-1">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-blue-400"></i>
+                        المهام النشطة (Pending Orders)
+                    </h2>
+                    <span class="bg-blue-600 text-xs px-2 py-1 rounded-full" id="taskCount">0</span>
+                </div>
+                
+                <div id="tasksList" class="flex flex-col gap-3 overflow-y-auto max-h-[600px] pr-2">
+                    <!-- Tasks will be injected here -->
+                    <div class="text-center text-gray-400 py-8" id="emptyTasks">
+                        <i class="fa-solid fa-check-circle text-4xl mb-2 opacity-50"></i>
+                        <p>لا توجد مهام معلقة</p>
+                    </div>
                 </div>
             </div>
-            <div class="patient-card" onclick="selectPatient(2, 'خالد السعيد')">
-                <div style="font-weight:bold; font-size:1.1rem;">خالد السعيد</div>
-                <div style="color:var(--text-muted); font-size:0.9rem; margin-top:5px;">سرير: ICU-02 | MRN-8821</div>
+        </div>
+
+        <!-- Middle Column: Vitals Entry Flowsheet -->
+        <div class="lg:col-span-1 flex flex-col gap-6">
+            <div class="glass-panel p-5">
+                <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
+                    <i class="fa-solid fa-heart-pulse text-red-400"></i>
+                    إدخال العلامات الحيوية (Flowsheet Entry)
+                </h2>
+                
+                <form id="flowsheetForm" class="flex flex-col gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-1">رقم المريض (Patient ID)</label>
+                        <input type="number" id="fsPatientId" required class="glass-input w-full rounded-lg px-4 py-2" placeholder="Ex: 123">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm text-gray-300 mb-1">المؤشر (Parameter)</label>
+                            <select id="fsParamType" class="glass-input w-full rounded-lg px-4 py-2">
+                                <option value="GCS">GCS (مقياس غلاسكو)</option>
+                                <option value="Pain_Scale">مستوى الألم (Pain Scale)</option>
+                                <option value="IO_Balance">توازن السوائل (I/O Balance)</option>
+                                <option value="Temp">درجة الحرارة (Temp)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-300 mb-1">القيمة (Value)</label>
+                            <input type="number" id="fsParamValue" required class="glass-input w-full rounded-lg px-4 py-2" placeholder="Value">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-1">الوحدة (Unit)</label>
+                        <input type="text" id="fsUnit" class="glass-input w-full rounded-lg px-4 py-2" placeholder="Optional (e.g. mL, C)">
+                    </div>
+
+                    <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold py-3 rounded-lg shadow-lg shadow-emerald-500/30 transition mt-2">
+                        <i class="fa-solid fa-save mr-2"></i> حفظ السجل (Save Entry)
+                    </button>
+                </form>
+            </div>
+
+            <!-- Mini Quick Status -->
+            <div class="glass-panel p-5 flex-1 bg-gradient-to-br from-indigo-900/40 to-purple-900/40">
+                <h3 class="text-sm font-bold text-indigo-300 mb-2">تعليمات حرجة (Critical Limits)</h3>
+                <ul class="text-xs text-gray-300 space-y-2">
+                    <li><i class="fa-solid fa-circle-exclamation text-red-400 ml-1"></i> GCS &le; 8: يتطلب تدخل فوري (Intubation risk)</li>
+                    <li><i class="fa-solid fa-circle-exclamation text-orange-400 ml-1"></i> Pain &ge; 8: يتطلب مراجعة مسكنات قوية</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Right Column: Patients Grid -->
+        <div class="lg:col-span-1 flex flex-col gap-6">
+            <div class="glass-panel p-5 flex-1">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold flex items-center gap-2">
+                        <i class="fa-solid fa-bed-pulse text-green-400"></i>
+                        المرضى في الجناح (Unit Patients)
+                    </h2>
+                </div>
+                
+                <div class="grid grid-cols-1 gap-3" id="patientsGrid">
+                    <!-- Sample Critical Patient -->
+                    <div class="glass-panel p-3 border-l-4 border-red-500 critical-alert">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-bold">أحمد عبدالله (مريض #1)</h4>
+                                <p class="text-xs text-gray-400">ICU Bed 04</p>
+                            </div>
+                            <span class="bg-red-500/20 text-red-400 text-xs px-2 py-1 rounded">CRITICAL</span>
+                        </div>
+                        <div class="flex gap-4 mt-3 text-sm">
+                            <div class="text-center">
+                                <p class="text-gray-400 text-xs">GCS</p>
+                                <p class="font-bold text-red-400">7</p>
+                            </div>
+                            <div class="text-center border-r border-gray-600 pr-4">
+                                <p class="text-gray-400 text-xs">Pain</p>
+                                <p class="font-bold">3</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sample Stable Patient -->
+                    <div class="glass-panel p-3 border-l-4 border-green-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-bold">سارة خالد (مريض #5)</h4>
+                                <p class="text-xs text-gray-400">ICU Bed 05</p>
+                            </div>
+                            <span class="bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded">Stable</span>
+                        </div>
+                        <div class="flex gap-4 mt-3 text-sm">
+                            <div class="text-center">
+                                <p class="text-gray-400 text-xs">GCS</p>
+                                <p class="font-bold text-green-400">15</p>
+                            </div>
+                            <div class="text-center border-r border-gray-600 pr-4">
+                                <p class="text-gray-400 text-xs">Pain</p>
+                                <p class="font-bold">2</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Panel 2: Task Board -->
-    <div class="panel">
-        <div class="header">📋 مهام التمريض (Task Board)</div>
-        <div class="body" id="taskBoard">
-            <!-- Tasks loaded dynamically -->
-        </div>
-    </div>
-
-    <!-- Panel 3: Flowsheets -->
-    <div class="panel">
-        <div class="header">📈 السجلات السريرية (Flowsheets)</div>
-        <div class="body">
-            <div class="fs-group">
-                <label>مستوى الألم (Pain Scale: 0-10)</label>
-                <div class="range-container">
-                    <input type="range" id="painScale" min="0" max="10" value="0" oninput="document.getElementById('painVal').innerText=this.value; updateChart();">
-                    <div class="range-val" id="painVal" style="color:var(--accent-green)">0</div>
-                </div>
-            </div>
-
-            <div class="fs-group">
-                <label>مقياس غلاسكو للغيبوبة (GCS: 3-15)</label>
-                <div class="range-container">
-                    <input type="range" id="gcsScore" min="3" max="15" value="15" oninput="document.getElementById('gcsVal').innerText=this.value; updateChart();">
-                    <div class="range-val" id="gcsVal" style="color:var(--accent-blue)">15</div>
-                </div>
-            </div>
-
-            <div class="fs-group">
-                <label>توازن السوائل (I/O Balance - ml)</label>
-                <input type="number" id="ioBalance" class="fs-input" placeholder="مثال: +200 أو -150">
-            </div>
-
-            <button class="btn-save" onclick="saveFlowsheet()">حفظ وإرسال التحديثات 🚀</button>
-
-            <div style="margin-top:20px; color:var(--text-muted); font-size:0.9rem;">مؤشر التدهور السريري (Trend):</div>
-            <div class="chart-container" id="trendChart">
-                <div class="bar" style="height: 100%;"></div>
-                <div class="bar" style="height: 90%;"></div>
-                <div class="bar" style="height: 95%;"></div>
-                <div class="bar" style="height: 100%;" id="currentBar"></div>
-            </div>
-        </div>
-    </div>
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 flex flex-col gap-2 z-50"></div>
 
     <script>
-        // Setup Socket.IO
+        // Clock
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString('ar-SA');
+        }, 1000);
+
+        // Toast Notification System
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            let bgClass = 'bg-blue-600';
+            let icon = 'fa-info-circle';
+            
+            if (type === 'urgent') { bgClass = 'bg-red-600'; icon = 'fa-triangle-exclamation'; }
+            if (type === 'success') { bgClass = 'bg-emerald-600'; icon = 'fa-check-circle'; }
+
+            toast.className = `toast-enter ${bgClass} text-white px-4 py-3 rounded-lg shadow-lg flex items-start gap-3 max-w-sm`;
+            toast.innerHTML = `
+                <i class="fa-solid ${icon} mt-1"></i>
+                <div class="text-sm font-medium">${message}</div>
+            `;
+            
+            container.appendChild(toast);
+            
+            if (type === 'urgent') {
+                const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+                audio.play().catch(e => console.log('Audio play prevented', e));
+            }
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        // --- Socket.io Integration ---
         const socket = io();
-        let currentPatientId = 1;
-        
+
         socket.on('connect', () => {
-            console.log('Connected to server');
-            // Mock auth for demo
-            socket.emit('auth', 'nurse_demo');
-            socket.emit('watch-patient', currentPatientId);
+            console.log('Connected to Clinical Command Center');
+            showToast('تم الاتصال بنظام الأوامر السريرية', 'success');
         });
 
-        // Listen for new orders coming from Command Center
+        // Listen for new tasks (from Doctor's CPOE)
         socket.on('new-order', (order) => {
-            if (order.patient_id === currentPatientId) {
-                loadTasks(); // Reload tasks to show the new one
+            showToast(`أمر جديد (${order.order_type}) للمريض #${order.patient_id}`, 'info');
+            fetchTasks(); // Refresh list
+        });
+
+        // Listen for critical alerts
+        socket.on('clinical-alert', (alertData) => {
+            if(alertData.type === 'urgent') {
+                showToast(alertData.text, 'urgent');
+                // You would typically update the UI grid here as well
             }
         });
 
-        // State
-        const tasks = [
-            { id: 101, type: 'تحليل مختبر', name: 'Troponin I, High Sensitivity', status: 'Pending' },
-            { id: 102, type: 'تخطيط قلب', name: 'ECG 12-Lead STAT', status: 'Pending' },
-            { id: 103, type: 'أدوية', name: 'إعطاء Aspirin 300mg', status: 'Pending' }
-        ];
 
-        function loadTasks() {
-            const board = document.getElementById('taskBoard');
-            board.innerHTML = '';
-            tasks.forEach(t => {
-                const isDone = t.status === 'Sample Collected' || t.status === 'Done';
-                const div = document.createElement('div');
-                div.className = `task-item ${isDone ? 'done' : ''}`;
-                div.innerHTML = `
-                    <div>
-                        <div style="font-size:0.8rem; color:var(--text-muted);">${t.type}</div>
-                        <div style="font-weight:bold; font-size:1.1rem;">${t.name}</div>
-                    </div>
-                    ${!isDone ? `<button class="btn-action" onclick="executeTask(${t.id})">${t.type.includes('مختبر') ? 'سحب العينة' : 'تنفيذ'}</button>` : '<span style="color:var(--accent-green);font-weight:bold;">✔ تم</span>'}
-                `;
-                board.appendChild(div);
-            });
-        }
-
-        function executeTask(taskId) {
-            const task = tasks.find(t => t.id === taskId);
-            if (task) {
-                task.status = 'Done';
+        // --- API Functions ---
+        async function fetchTasks() {
+            try {
+                const dept = document.getElementById('deptSelect').value;
+                const res = await fetch(`/api/nursing/tasks/${dept}`);
+                if (!res.ok) throw new Error('Failed to fetch');
+                const tasks = await res.json();
                 
-                // If it's a lab/rad order, trigger the backend API so it notifies the doctor
-                fetch('/api/nursing/orders/1/collect', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' }
-                }).then(() => loadTasks())
-                  .catch(e => {
-                      // Fallback for simulation if ID doesn't exist
-                      console.log('API call failed, running local update');
-                      loadTasks();
-                  });
+                const list = document.getElementById('tasksList');
+                document.getElementById('taskCount').innerText = tasks.length;
+                
+                if (tasks.length === 0) {
+                    list.innerHTML = `<div class="text-center text-gray-400 py-8"><i class="fa-solid fa-check-circle text-4xl mb-2 opacity-50"></i><p>لا توجد مهام معلقة</p></div>`;
+                    return;
+                }
+
+                list.innerHTML = tasks.map(t => `
+                    <div class="bg-slate-800/80 border border-slate-700 p-3 rounded-lg flex flex-col gap-2 relative overflow-hidden group">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 ${t.status === 'Pending' ? 'bg-amber-400' : 'bg-blue-400'}"></div>
+                        <div class="flex justify-between items-start pl-2">
+                            <div>
+                                <span class="text-xs bg-slate-700 px-2 py-0.5 rounded text-gray-300">#Task-${t.task_id}</span>
+                                <h4 class="font-bold text-sm mt-1">${t.task_name}</h4>
+                                <p class="text-xs text-gray-400 mt-1"><i class="fa-solid fa-user text-gray-500 mr-1"></i> Patient #${t.patient_id}</p>
+                            </div>
+                            <span class="text-xs px-2 py-1 rounded-full ${t.status === 'Pending' ? 'bg-amber-500/20 text-amber-300' : 'bg-blue-500/20 text-blue-300'}">${t.status}</span>
+                        </div>
+                        <div class="flex gap-2 mt-2 pl-2">
+                            ${t.status === 'Pending' ? 
+                                `<button onclick="updateTask(${t.task_id}, 'In-Progress')" class="flex-1 bg-blue-600/50 hover:bg-blue-500/50 text-blue-200 text-xs py-1.5 rounded transition">Start (بدء)</button>` 
+                                : ''}
+                            <button onclick="updateTask(${t.task_id}, 'Completed')" class="flex-1 bg-emerald-600/50 hover:bg-emerald-500/50 text-emerald-200 text-xs py-1.5 rounded transition">Complete (إنجاز)</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error(err);
             }
         }
 
-        function updateChart() {
-            const pain = parseInt(document.getElementById('painScale').value);
-            const gcs = parseInt(document.getElementById('gcsScore').value);
-            
-            const painVal = document.getElementById('painVal');
-            const gcsVal = document.getElementById('gcsVal');
-            
-            // Color logic
-            painVal.style.color = pain >= 8 ? 'var(--accent-red)' : pain >= 4 ? 'var(--accent-yellow)' : 'var(--accent-green)';
-            gcsVal.style.color = gcs <= 8 ? 'var(--accent-red)' : gcs <= 12 ? 'var(--accent-yellow)' : 'var(--accent-blue)';
-
-            // Bar chart logic (Pain up = bad, GCS down = bad -> Calculate a "health" score 0-100)
-            const painScore = 100 - (pain * 10); // 0 pain = 100
-            const gcsScore = (gcs / 15) * 100;   // 15 GCS = 100
-            const health = (painScore + gcsScore) / 2;
-
-            const bar = document.getElementById('currentBar');
-            bar.style.height = `${Math.max(10, health)}%`;
-            if (health < 40) bar.className = 'bar danger';
-            else bar.className = 'bar';
+        async function updateTask(taskId, status) {
+            try {
+                const res = await fetch(`/api/nursing/tasks/${taskId}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+                if (res.ok) {
+                    showToast(`تم تحديث حالة المهمة إلى: ${status}`, 'success');
+                    fetchTasks();
+                }
+            } catch (err) {
+                showToast('خطأ في تحديث المهمة', 'urgent');
+            }
         }
 
-        function saveFlowsheet() {
-            const gcs = document.getElementById('gcsScore').value;
-            const pain = document.getElementById('painScale').value;
-            const io = document.getElementById('ioBalance').value;
-
-            fetch('/api/nursing/flowsheets', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    patient_id: currentPatientId,
-                    gcs_score: gcs,
-                    pain_scale: pain,
-                    io_balance: io
-                })
-            }).then(res => res.json())
-              .then(data => {
-                  alert(data.message || 'تم حفظ السجلات بنجاح!');
-                  if (gcs <= 8 || pain >= 8) {
-                      // Already emitted by backend, visual feedback here
-                      document.body.style.boxShadow = 'inset 0 0 50px rgba(239, 68, 68, 0.5)';
-                      setTimeout(() => document.body.style.boxShadow = 'none', 1000);
-                  }
-              }).catch(err => {
-                  console.error(err);
-                  alert('حدث خطأ أثناء الاتصال بالخادم. (تأكد من تسجيل الدخول)');
-              });
-        }
-
-        function selectPatient(id, name) {
-            currentPatientId = id;
-            document.querySelectorAll('.patient-card').forEach(c => c.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+        // Flowsheet Form Submit
+        document.getElementById('flowsheetForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
             
-            // Room switch
-            socket.emit('unwatch-patient', currentPatientId);
-            socket.emit('watch-patient', id);
-        }
+            const payload = {
+                patient_id: document.getElementById('fsPatientId').value,
+                parameter_type: document.getElementById('fsParamType').value,
+                parameter_value: document.getElementById('fsParamValue').value,
+                unit: document.getElementById('fsUnit').value
+            };
 
-        // Init
-        loadTasks();
+            try {
+                const res = await fetch('/api/nursing/flowsheet/entry', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await res.json();
+                if (data.success) {
+                    if (data.is_critical) {
+                        showToast(`تم حفظ السجل. تم اكتشاف قراءة حرجة! تم تنبيه الطبيب.`, 'urgent');
+                    } else {
+                        showToast('تم حفظ العلامات الحيوية بنجاح', 'success');
+                    }
+                    e.target.reset();
+                }
+            } catch (err) {
+                showToast('خطأ في حفظ البيانات', 'urgent');
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchTasks();
+        });
+
     </script>
 </body>
 </html>
