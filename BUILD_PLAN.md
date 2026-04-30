@@ -1,5 +1,5 @@
-# خطة بناء نظام نما الطبي الويب (Namaweb3) — البلوبرنت الكامل
-# Nama Medical ERP — Complete Build Blueprint
+# خطة بناء نظام المركز الطبي الويب (Namaweb3) — البلوبرنت الكامل
+# Medical ERP — Complete Build Blueprint
 # Version: 1.0 | Date: 2026-02-23
 
 ---

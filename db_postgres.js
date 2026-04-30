@@ -1616,6 +1616,60 @@ CREATE TABLE IF NOT EXISTS cosmetic_followups (
         // Default admin
         await client.query(`INSERT INTO system_users (username, password_hash, display_name, role) VALUES ('admin', 'admin', 'المدير العام', 'Admin') ON CONFLICT (username) DO NOTHING`);
 
+        // ===== MASTER BLUEPRINT TABLES =====
+        await client.query(`
+CREATE TABLE IF NOT EXISTS departments_catalog (
+    id SERIAL PRIMARY KEY,
+    name_en TEXT DEFAULT '', name_ar TEXT DEFAULT '',
+    head_of_department TEXT DEFAULT '',
+    is_center_of_excellence INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS telehealth_sessions (
+    id SERIAL PRIMARY KEY,
+    patient_id INTEGER, doctor_id INTEGER,
+    session_link TEXT DEFAULT '', scheduled_time TIMESTAMP,
+    status TEXT DEFAULT 'Scheduled', notes TEXT DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS clinical_pathways (
+    id SERIAL PRIMARY KEY,
+    disease_name TEXT DEFAULT '', steps TEXT DEFAULT '',
+    department TEXT DEFAULT '', created_by TEXT DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS incident_reports (
+    id SERIAL PRIMARY KEY,
+    reporter_name TEXT DEFAULT '', department TEXT DEFAULT '',
+    incident_type TEXT DEFAULT '', description TEXT DEFAULT '',
+    severity TEXT DEFAULT 'Low', rca_notes TEXT DEFAULT '',
+    status TEXT DEFAULT 'Open', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS patient_surveys (
+    id SERIAL PRIMARY KEY,
+    patient_id INTEGER, department TEXT DEFAULT '',
+    rating INTEGER DEFAULT 5, feedback TEXT DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS procedure_costs (
+    id SERIAL PRIMARY KEY,
+    procedure_name TEXT DEFAULT '', department TEXT DEFAULT '',
+    base_cost REAL DEFAULT 0, consumables_cost REAL DEFAULT 0,
+    total_cost REAL DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS academic_programs (
+    id SERIAL PRIMARY KEY,
+    program_name TEXT DEFAULT '', director TEXT DEFAULT '',
+    start_date DATE, end_date DATE, status TEXT DEFAULT 'Active'
+);
+CREATE TABLE IF NOT EXISTS clinical_trials (
+    id SERIAL PRIMARY KEY,
+    trial_name TEXT DEFAULT '', phase TEXT DEFAULT '',
+    pi_name TEXT DEFAULT '', status TEXT DEFAULT 'Planning',
+    irb_approval TEXT DEFAULT '', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+        `);
+
         // ===== MIGRATIONS: Add missing columns to existing tables =====
         try {
             await client.query(`

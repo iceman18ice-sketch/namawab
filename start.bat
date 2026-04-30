@@ -1,11 +1,11 @@
 @echo off
 chcp 65001 >nul 2>&1
-title Nama Medical ERP Server
+title Medical ERP Server
 color 0B
 
 echo.
-echo  🏥 Nama Medical ERP - Starting Server...
-echo  🏥 نما الطبي - تشغيل الخادم...
+echo  🏥 Medical ERP - Starting Server...
+echo  🏥 المركز الطبي - تشغيل الخادم...
 echo.
 
 :: Check if setup was done

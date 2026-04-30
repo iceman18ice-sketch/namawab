@@ -10,7 +10,7 @@ window.escapeHTML = function escapeHTML(str) {
     .replace(/'/g, '&#39;');
 };
 
-// ===== Nama Medical ERP - Admin Panel =====
+// ===== Medical ERP - Admin Panel =====
 let currentUser = null;
 let allUsers = [];
 let selectedFacilityType = 'hospital';

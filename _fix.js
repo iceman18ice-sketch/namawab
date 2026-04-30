@@ -2,7 +2,7 @@
 const { Pool } = require('pg');
 
 async function fix() {
-    console.log('=== Nama Medical - Quick Fix ===\n');
+    console.log('=== Medical Center - Quick Fix ===\n');
 
     // Step 1: Try connecting to default 'postgres' database
     console.log('1. Testing PostgreSQL connection...');

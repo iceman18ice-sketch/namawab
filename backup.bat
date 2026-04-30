@@ -1,5 +1,5 @@
 @echo off
-REM Nama Medical - Database Backup Script
+REM Medical Center - Database Backup Script
 REM Usage: backup.bat [optional: output_folder]
 
 setlocal
@@ -17,7 +17,7 @@ set TIMESTAMP=%TIMESTAMP: =0%
 set BACKUP_FILE=%BACKUP_DIR%\nama_backup_%TIMESTAMP%.sql
 
 echo ========================================
-echo   Nama Medical - Database Backup
+echo   Medical Center - Database Backup
 echo ========================================
 echo.
 echo Database: %PGDATABASE%

@@ -1,4 +1,4 @@
-# 🏥 Nama Medical ERP — نما الطبي
+# 🏥 Medical ERP — المركز الطبي
 
 نظام إدارة المستشفيات الشامل | Comprehensive Hospital Management System
 

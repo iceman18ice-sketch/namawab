@@ -10,7 +10,7 @@ window.escapeHTML = function escapeHTML(str) {
     .replace(/'/g, '&#39;');
 };
 
-// ===== Nama Medical ERP - Main App =====
+// ===== Medical ERP - Main App =====
 let currentUser = null;
 let isArabic = localStorage.getItem('namaLang') === 'ar' ? true : (localStorage.getItem('namaLang') === 'en' ? false : false);
 let currentPage = 0;
@@ -68,6 +68,10 @@ const NAV_ITEMS = [
   { icon: '💎', en: 'Cosmetic Surgery', ar: 'جراحة التجميل' },
   { icon: '🤰', en: 'OB/GYN', ar: 'النساء والتوليد' },
   { icon: '⚙️', en: 'Settings', ar: 'الإعدادات' },
+  { icon: '🩺', en: 'Consultation', ar: 'الكشف' },
+  { icon: '🏢', en: 'Departments Catalog', ar: 'دليل الأقسام' },
+  { icon: '🛣️', en: 'Clinical Pathways', ar: 'المسارات السريرية' },
+  { icon: '🔬', en: 'Academic & Research', ar: 'البحث الأكاديمي' }
 ];
 
 // ===== INIT =====
@@ -199,9 +203,9 @@ function setupEvents() {
 function updateShellLanguage() {
   // Sidebar title & subtitle
   const sidebarTitle = document.querySelector('.sidebar-title');
-  if (sidebarTitle) sidebarTitle.textContent = isArabic ? 'نما الطبي' : 'Nama Medical';
+  if (sidebarTitle) sidebarTitle.textContent = isArabic ? 'المركز الطبي' : 'Medical Center';
   const sidebarSubtitle = document.querySelector('.sidebar-subtitle');
-  if (sidebarSubtitle) sidebarSubtitle.textContent = isArabic ? 'Nama Medical' : 'Medical ERP';
+  if (sidebarSubtitle) sidebarSubtitle.textContent = isArabic ? 'Medical Center' : 'Medical ERP';
 
   // Search placeholder
   const searchBox = document.getElementById('globalSearch');
@@ -236,7 +240,7 @@ function updateShellLanguage() {
 
   // Page title
   const pageTitle = document.querySelector('title');
-  if (pageTitle) pageTitle.textContent = isArabic ? 'نما الطبي - Nama Medical ERP' : 'Nama Medical ERP';
+  if (pageTitle) pageTitle.textContent = isArabic ? 'المركز الطبي - Medical ERP' : 'Medical ERP';
 }
 
 async function navigateTo(page) {
@@ -306,9 +310,9 @@ window.printDocument = function (title, content, options = {}) {
       .signature div{text-align:center;min-width:150px;border-top:1px solid #333;padding-top:4px;font-size:11px}
       @media print{body{padding:10px} .no-print{display:none!important}}
     </style></head><body>
-    ${showHeader ? '<div class="header"><h1>' + (options.companyName || 'نما الطبي — Nama Medical') + '</h1><p>' + (options.companyInfo || 'مستشفى نما الطبي | Nama Medical Hospital') + '</p></div><h2 style="text-align:center;color:#1a5276;margin-bottom:16px">' + title + '</h2>' : ''}
+    ${showHeader ? '<div class="header"><h1>' + (options.companyName || 'المركز الطبي — Medical Center') + '</h1><p>' + (options.companyInfo || 'المركز الطبي | Medical Center Hospital') + '</p></div><h2 style="text-align:center;color:#1a5276;margin-bottom:16px">' + title + '</h2>' : ''}
     ${content}
-    <div class="footer">${tr('Printed on', 'طُبع بتاريخ')}: ${new Date().toLocaleString('ar-SA')} | ${tr('Nama Medical ERP', 'نما الطبي')}</div>
+    <div class="footer">${tr('Printed on', 'طُبع بتاريخ')}: ${new Date().toLocaleString('ar-SA')} | ${tr('Medical ERP', 'المركز الطبي')}</div>
     <button class="no-print" onclick="window.print()" style="position:fixed;top:10px;right:10px;padding:10px 24px;background:#1a5276;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px">🖨️ ${tr('Print', 'طباعة')}</button>
   </body></html>`);
   w.document.close();
@@ -400,7 +404,7 @@ async function renderConsentForms(el) {
     const patientName = document.getElementById('cfPatient')?.value || '_______________';
     const mrn = document.getElementById('cfMRN')?.value || '___________';
     const now = new Date().toLocaleDateString('ar-SA');
-    const body = '<div style="text-align:center;border-bottom:3px double #1a5276;padding-bottom:16px;margin-bottom:20px"><h1 style="color:#1a5276;margin:0">نما الطبي — Nama Medical</h1><p style="color:#666;margin:4px 0">' + tr('Consent Form', 'نموذج موافقة') + '</p></div>' +
+    const body = '<div style="text-align:center;border-bottom:3px double #1a5276;padding-bottom:16px;margin-bottom:20px"><h1 style="color:#1a5276;margin:0">المركز الطبي — Medical Center</h1><p style="color:#666;margin:4px 0">' + tr('Consent Form', 'نموذج موافقة') + '</p></div>' +
       '<h2 style="text-align:center;color:#1a5276;margin-bottom:20px">' + tr(en, ar) + '</h2>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px"><div><strong>' + tr('Patient', 'المريض') + ':</strong> ' + patientName + '</div><div><strong>' + tr('MRN', 'رقم الملف') + ':</strong> ' + mrn + '</div><div><strong>' + tr('Date', 'التاريخ') + ':</strong> ' + now + '</div></div>' +
       '<div style="border:1px solid #ddd;padding:20px;border-radius:8px;margin-bottom:20px;min-height:200px"><p>' + tr('I, the undersigned, hereby consent to...', 'أنا الموقع أدناه أوافق على...') + '</p><br><p style="color:#999;font-size:12px">' + tr('Patient has been informed about the procedure, risks, and alternatives.', 'تم إبلاغ المريض بالإجراء والمخاطر والبدائل.') + '</p></div>' +
@@ -517,7 +521,7 @@ window.printSignedConsent = async function (id) {
     if (!c) return;
     const tmpl = await API.get('/api/consent/templates/' + c.template_id);
     let html = '<div style="direction:rtl;text-align:right;font-family:Arial,sans-serif">' +
-      '<div style="text-align:center;margin-bottom:20px"><h2>مركز نما الطبي</h2><h3 style="color:#1a56db">' + tmpl.title_ar + '</h3></div>' +
+      '<div style="text-align:center;margin-bottom:20px"><h2>مركز المركز الطبي</h2><h3 style="color:#1a56db">' + tmpl.title_ar + '</h3></div>' +
       '<div style="white-space:pre-wrap;line-height:2.2;font-size:14px;margin-bottom:20px">' + tmpl.body_text_ar + '</div>' +
       (c.procedure_details ? '<div style="margin-bottom:16px;padding:8px;border:1px solid #ccc;border-radius:4px"><strong>تفاصيل الإجراء:</strong> ' + c.procedure_details + '</div>' : '') +
       '<div style="margin-top:30px;display:flex;justify-content:space-between">' +
@@ -679,9 +683,147 @@ window.saveAntenatal = async (pregId, patientId) => {
 async function loadPage(page) {
   const el = document.getElementById('pageContent');
   el.style.animation = 'none'; el.offsetHeight; el.style.animation = '';
-  const pages = [renderDashboard, renderReception, renderAppointments, renderDoctor, renderLab, renderRadiology, renderPharmacy, renderHR, renderFinance, renderInsurance, renderInventory, renderNursing, renderWaitingQueue, renderPatientAccounts, renderReports, renderMessaging, renderCatalog, renderDeptRequests, renderSurgery, renderBloodBank, renderConsentForms, renderEmergency, renderInpatient, renderICU, renderCSSD, renderDietary, renderInfectionControl, renderQuality, renderMaintenance, renderTransport, renderMedicalRecords, renderClinicalPharmacy, renderRehabilitation, renderPatientPortal, renderZATCA, renderTelemedicine, renderPathology, renderSocialWork, renderMortuary, renderCME, renderCosmeticSurgery, renderOBGYN, renderSettings];
+  const pages = [renderDashboard, renderReception, renderAppointments, renderDoctor, renderLab, renderRadiology, renderPharmacy, renderHR, renderFinance, renderInsurance, renderInventory, renderNursing, renderWaitingQueue, renderPatientAccounts, renderReports, renderMessaging, renderCatalog, renderDeptRequests, renderSurgery, renderBloodBank, renderConsentForms, renderEmergency, renderInpatient, renderICU, renderCSSD, renderDietary, renderInfectionControl, renderQuality, renderMaintenance, renderTransport, renderMedicalRecords, renderClinicalPharmacy, renderRehabilitation, renderPatientPortal, renderZATCA, renderTelemedicine, renderPathology, renderSocialWork, renderMortuary, renderCME, renderCosmeticSurgery, renderOBGYN, renderSettings, renderConsultation, renderDepartmentsCatalog, renderClinicalPathways, renderAcademicResearch];
   if (pages[page]) await pages[page](el);
   else el.innerHTML = `<div class="page-title">${NAV_ITEMS[page]?.icon} ${tr(NAV_ITEMS[page]?.en, NAV_ITEMS[page]?.ar)}</div><div class="card"><p>${tr('Coming soon...', 'قريباً...')}</p></div>`;
+}
+
+// ===== NEW BLUEPRINT MODULES =====
+async function renderDepartmentsCatalog(el) {
+  let deps = [];
+  try { deps = await API.get('/api/departments'); } catch(e){}
+  const coeCount = deps.filter(d => d.is_center_of_excellence).length;
+
+  el.innerHTML = '<div class="page-title">🏢 ' + tr('Departments Catalog', 'دليل الأقسام') + '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">' +
+      '<div class="card" style="padding:16px;text-align:center;background:#e8f4fd"><h3 style="margin:0;color:#1a5276">' + deps.length + '</h3><p style="margin:4px 0 0;font-size:12px">' + tr('Total Departments', 'إجمالي الأقسام') + '</p></div>' +
+      '<div class="card" style="padding:16px;text-align:center;background:#fff8e1"><h3 style="margin:0;color:#f57f17">' + coeCount + '</h3><p style="margin:4px 0 0;font-size:12px">' + tr('Centers of Excellence', 'مراكز التميز') + '</p></div>' +
+    '</div>' +
+    '<div class="card" style="padding:20px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">' +
+        '<h4 style="margin:0">' + tr('Departments Directory', 'دليل الأقسام') + '</h4>' +
+        '<button class="btn btn-primary" onclick="showAddDeptModal()">+ ' + tr('Add Department', 'إضافة قسم') + '</button>' +
+      '</div>' +
+      makeTable([tr('Department Name', 'اسم القسم'), tr('Head of Department', 'رئيس القسم'), tr('Center of Excellence', 'مركز تميز')],
+      deps.map(d => ({ cells: [isArabic ? (d.name_ar || d.name_en) : (d.name_en || d.name_ar), d.head_of_department || '-', d.is_center_of_excellence ? '⭐ ' + tr('Yes', 'نعم') : '-'] }))) +
+    '</div>';
+
+  window.showAddDeptModal = () => {
+    const html = '<div class="form-group"><label>' + tr('Name (English)', 'الاسم (إنجليزي)') + '</label><input id="dNameEn" class="form-input"></div>' +
+                 '<div class="form-group"><label>' + tr('Name (Arabic)', 'الاسم (عربي)') + '</label><input id="dNameAr" class="form-input"></div>' +
+                 '<div class="form-group"><label>' + tr('Head of Dept', 'رئيس القسم') + '</label><input id="dHead" class="form-input"></div>' +
+                 '<div class="form-group"><label><input type="checkbox" id="dCoe"> ' + tr('Center of Excellence', 'مركز تميز') + '</label></div>' +
+                 '<button class="btn btn-primary w-full" onclick="saveDept()">💾 ' + tr('Save', 'حفظ') + '</button>';
+    showModal(tr('Add Department', 'إضافة قسم'), html);
+  };
+  
+  window.saveDept = async () => {
+    try {
+      await API.post('/api/departments', { name_en: document.getElementById('dNameEn').value, name_ar: document.getElementById('dNameAr').value, head_of_department: document.getElementById('dHead').value, is_center_of_excellence: document.getElementById('dCoe').checked ? 1 : 0 });
+      showToast(tr('Department Added!', 'تمت إضافة القسم!'));
+      document.querySelector('.modal-overlay')?.remove();
+      navigateTo(currentPage);
+    } catch(e) { showToast(tr('Error saving', 'خطأ في الحفظ'), 'error'); }
+  };
+}
+
+async function renderClinicalPathways(el) {
+  let pathways = [];
+  try { pathways = await API.get('/api/clinical_pathways'); } catch(e){}
+
+  el.innerHTML = '<div class="page-title">🛣️ ' + tr('Clinical Pathways', 'المسارات السريرية') + '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 2fr;gap:16px">' +
+      '<div class="card" style="padding:20px">' +
+        '<h4 style="margin-bottom:12px">' + tr('Add Pathway', 'إضافة مسار') + '</h4>' +
+        '<div class="form-group"><label>' + tr('Disease/Condition', 'الحالة المرضية') + '</label><input id="cpName" class="form-input"></div>' +
+        '<div class="form-group"><label>' + tr('Department', 'القسم') + '</label><input id="cpDept" class="form-input"></div>' +
+        '<div class="form-group"><label>' + tr('Treatment Steps', 'خطوات العلاج') + '</label><textarea id="cpSteps" class="form-input" rows="4"></textarea></div>' +
+        '<button class="btn btn-primary w-full" onclick="savePathway()">💾 ' + tr('Save Pathway', 'حفظ المسار') + '</button>' +
+      '</div>' +
+      '<div class="card" style="padding:20px">' +
+        '<h4 style="margin-bottom:12px">' + tr('Active Pathways', 'المسارات النشطة') + '</h4>' +
+        makeTable([tr('Condition', 'الحالة'), tr('Dept', 'القسم'), tr('Created By', 'المنشئ'), tr('Date', 'التاريخ')],
+        pathways.map(p => ({ cells: [p.disease_name, p.department, p.created_by, new Date(p.created_at).toLocaleDateString('ar-SA')] }))) +
+      '</div>' +
+    '</div>';
+
+  window.savePathway = async () => {
+    try {
+      await API.post('/api/clinical_pathways', { disease_name: document.getElementById('cpName').value, department: document.getElementById('cpDept').value, steps: document.getElementById('cpSteps').value });
+      showToast(tr('Pathway saved!', 'تم حفظ المسار!'));
+      navigateTo(currentPage);
+    } catch(e) { showToast(tr('Error saving', 'خطأ في الحفظ'), 'error'); }
+  };
+}
+
+async function renderAcademicResearch(el) {
+  let programs = [];
+  let trials = [];
+  try { 
+      programs = await API.get('/api/academic/programs'); 
+      trials = await API.get('/api/academic/trials');
+  } catch(e){}
+  
+  el.innerHTML = '<div class="page-title">🔬 ' + tr('Academic & Research', 'البحث الأكاديمي') + '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">' +
+      '<div class="card" style="padding:20px;border-top:4px solid #8e44ad">' +
+        '<h4>🎓 ' + tr('Fellowship Programs', 'برامج الزمالة') + '</h4>' +
+        '<p style="font-size:24px;font-weight:bold;margin:8px 0;color:#8e44ad">' + programs.length + '</p>' +
+        '<p style="font-size:12px;color:var(--text-muted)">' + tr('Active Training Programs', 'برامج تدريبية نشطة') + '</p>' +
+      '</div>' +
+      '<div class="card" style="padding:20px;border-top:4px solid #2980b9">' +
+        '<h4>🧪 ' + tr('Clinical Trials', 'التجارب السريرية') + '</h4>' +
+        '<p style="font-size:24px;font-weight:bold;margin:8px 0;color:#2980b9">' + trials.length + '</p>' +
+        '<p style="font-size:12px;color:var(--text-muted)">' + tr('Ongoing Research Studies', 'دراسات بحثية مستمرة') + '</p>' +
+      '</div>' +
+    '</div>' +
+    '<div class="card" style="padding:20px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">' +
+          '<h4 style="margin:0">' + tr('Programs Directory', 'دليل البرامج') + '</h4>' +
+          '<button class="btn btn-primary btn-sm" onclick="showAddProgramModal()">+ ' + tr('Add Program', 'إضافة برنامج') + '</button>' +
+      '</div>' +
+      makeTable([tr('Program Name', 'اسم البرنامج'), tr('Director', 'المدير'), tr('Status', 'الحالة')],
+      programs.map(p => ({ cells: [p.program_name, p.director || '-', badge(p.status || 'Active', 'success')] }))) + 
+    '</div>' +
+    '<div class="card" style="padding:20px;margin-top:16px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">' +
+          '<h4 style="margin:0">' + tr('Clinical Trials', 'التجارب السريرية') + '</h4>' +
+          '<button class="btn btn-primary btn-sm" onclick="showAddTrialModal()">+ ' + tr('Add Trial', 'إضافة تجربة') + '</button>' +
+      '</div>' +
+      makeTable([tr('Trial Name', 'اسم التجربة'), tr('Phase', 'المرحلة'), tr('PI Name', 'الباحث الرئيسي'), tr('Status', 'الحالة')],
+      trials.map(t => ({ cells: [t.trial_name, t.phase || '-', t.pi_name || '-', statusBadge(t.status || 'Active')] }))) +
+    '</div>';
+
+    window.showAddProgramModal = () => {
+        const html = '<div class="form-group"><label>' + tr('Program Name', 'اسم البرنامج') + '</label><input id="apName" class="form-input"></div>' +
+                     '<div class="form-group"><label>' + tr('Director', 'المدير') + '</label><input id="apDir" class="form-input"></div>' +
+                     '<div class="form-group"><label>' + tr('Start Date', 'تاريخ البدء') + '</label><input type="date" id="apStart" class="form-input"></div>' +
+                     '<div class="form-group"><label>' + tr('End Date', 'تاريخ الانتهاء') + '</label><input type="date" id="apEnd" class="form-input"></div>' +
+                     '<button class="btn btn-primary w-full" onclick="saveProgram()">💾 ' + tr('Save', 'حفظ') + '</button>';
+        showModal(tr('Add Program', 'إضافة برنامج'), html);
+    };
+    window.saveProgram = async () => {
+        try {
+            await API.post('/api/academic/programs', { program_name: document.getElementById('apName').value, director: document.getElementById('apDir').value, start_date: document.getElementById('apStart').value, end_date: document.getElementById('apEnd').value });
+            showToast(tr('Program Added!', 'تمت إضافة البرنامج!'));
+            document.querySelector('.modal-overlay')?.remove(); navigateTo(currentPage);
+        } catch(e) { showToast('Error', 'error'); }
+    };
+    window.showAddTrialModal = () => {
+        const html = '<div class="form-group"><label>' + tr('Trial Name', 'اسم التجربة') + '</label><input id="atName" class="form-input"></div>' +
+                     '<div class="form-group"><label>' + tr('Phase', 'المرحلة') + '</label><select id="atPhase" class="form-input"><option>Phase 1</option><option>Phase 2</option><option>Phase 3</option><option>Phase 4</option></select></div>' +
+                     '<div class="form-group"><label>' + tr('PI Name', 'الباحث الرئيسي') + '</label><input id="atPI" class="form-input"></div>' +
+                     '<div class="form-group"><label>' + tr('IRB Approval', 'رقم الموافقة') + '</label><input id="atIRB" class="form-input"></div>' +
+                     '<button class="btn btn-primary w-full" onclick="saveTrial()">💾 ' + tr('Save', 'حفظ') + '</button>';
+        showModal(tr('Add Clinical Trial', 'إضافة تجربة سريرية'), html);
+    };
+    window.saveTrial = async () => {
+        try {
+            await API.post('/api/academic/trials', { trial_name: document.getElementById('atName').value, phase: document.getElementById('atPhase').value, pi_name: document.getElementById('atPI').value, status: 'Active', irb_approval: document.getElementById('atIRB').value });
+            showToast(tr('Trial Added!', 'تمت إضافة التجربة!'));
+            document.querySelector('.modal-overlay')?.remove(); navigateTo(currentPage);
+        } catch(e) { showToast('Error', 'error'); }
+    };
 }
 
 // ===== DASHBOARD =====
@@ -756,7 +898,7 @@ window.printMedicalReport = (report, type) => {
 
   let html = '<div style="font-family:Arial;padding:40px;direction:rtl;text-align:right;line-height:2">';
   html += '<div style="text-align:center;border-bottom:2px solid #1a73e8;padding-bottom:16px;margin-bottom:24px">';
-  html += '<h2 style="color:#1a73e8;margin:0">نما الطبي - Nama Medical</h2>';
+  html += '<h2 style="color:#1a73e8;margin:0">المركز الطبي - Medical Center</h2>';
   html += '<p style="margin:4px 0;color:#666">المملكة العربية السعودية</p>';
   html += '</div>';
   html += '<h3 style="text-align:center;background:#f0f6ff;padding:12px;border-radius:8px;margin:20px 0">' + label.ar + ' / ' + label.en + '</h3>';
@@ -1044,7 +1186,7 @@ window.printReceipt = (invoice) => {
   if (!invoice) return;
   let h = '<div style="font-family:Arial;width:300px;margin:0 auto;padding:20px;direction:rtl;text-align:right">';
   h += '<div style="text-align:center;border-bottom:2px dashed #333;padding-bottom:12px;margin-bottom:12px">';
-  h += '<h3 style="margin:0">نما الطبي</h3><p style="margin:2px 0;font-size:12px">Nama Medical</p>';
+  h += '<h3 style="margin:0">المركز الطبي</h3><p style="margin:2px 0;font-size:12px">Medical Center</p>';
   h += '<p style="margin:2px 0;font-size:11px;color:#666">المملكة العربية السعودية</p>';
   h += '</div>';
   h += '<p style="margin:4px 0;font-size:13px"><strong>' + tr('Receipt', 'إيصال') + '</strong></p>';
@@ -1249,7 +1391,7 @@ window.toggleLanguage = () => {
   if (typeof buildNav === 'function') buildNav();
   // Update header text if exists
   const headerTitle = document.querySelector('.header h1, .app-title, .logo-text');
-  if (headerTitle) headerTitle.textContent = isArabic ? 'نما الطبي' : 'Nama Medical';
+  if (headerTitle) headerTitle.textContent = isArabic ? 'المركز الطبي' : 'Medical Center';
   // Re-render current page content
   if (typeof navigateTo === 'function') navigateTo(currentPage);
   // Update the lang button text
@@ -1467,7 +1609,7 @@ window.printPatientStatement = async (patientId) => {
       '</td><td>' + (inv.total || 0) + ' SAR</td><td>' +
       (inv.paid ? '\u2705 ' + tr('Paid', 'مدفوع') : '\u26A0\uFE0F ' + tr('Unpaid', 'غير مدفوع')) + '</td></tr>'
     ).join('');
-    const content = '<div style="text-align:center;margin-bottom:20px"><h2>\u{1F3E5} ' + tr('Nama Medical', 'نما الطبي') + '</h2><div style="margin-bottom:8px"><button class="btn btn-sm" onclick="exportPatients()" style="background:#e0f7fa;color:#00838f">📥 ${tr("Export CSV","تصدير CSV")}</button></div><h3>' + tr('Patient Financial Statement', 'كشف حساب المريض') + '</h3></div>' +
+    const content = '<div style="text-align:center;margin-bottom:20px"><h2>\u{1F3E5} ' + tr('Medical Center', 'المركز الطبي') + '</h2><div style="margin-bottom:8px"><button class="btn btn-sm" onclick="exportPatients()" style="background:#e0f7fa;color:#00838f">📥 ${tr("Export CSV","تصدير CSV")}</button></div><h3>' + tr('Patient Financial Statement', 'كشف حساب المريض') + '</h3></div>' +
       '<table style="width:100%;margin-bottom:15px"><tr><td><strong>' + tr('Name', 'الاسم') + ':</strong> ' + (p.name_ar || p.name_en) + '</td><td><strong>MRN:</strong> ' + (p.mrn || p.file_number) + '</td></tr>' +
       '<tr><td><strong>' + tr('ID', 'الهوية') + ':</strong> ' + (p.national_id || '-') + '</td><td><strong>' + tr('Phone', 'الجوال') + ':</strong> ' + (p.phone || '-') + '</td></tr></table>' +
       '<table border="1" cellpadding="6" cellspacing="0" style="width:100%;border-collapse:collapse"><thead><tr style="background:#f0f0f0"><th>' + tr('Date', 'التاريخ') + '</th><th>' + tr('Description', 'الوصف') + '</th><th>' + tr('Amount', 'المبلغ') + '</th><th>' + tr('Status', 'الحالة') + '</th></tr></thead><tbody>' + rows + '</tbody></table>' +
@@ -1640,7 +1782,7 @@ async function renderReception(el) {
           <option value="نمساوي">🇦🇹 ${tr('Austrian', 'نمساوي')}</option>
           <option value="سويدي">🇸🇪 ${tr('Swedish', 'سويدي')}</option>
           <option value="نرويجي">🇳🇴 ${tr('Norwegian', 'نرويجي')}</option>
-          <option value="دنماركي">🇩🇰 ${tr('Danish', 'دنماركي')}</option>
+          <option value="دانماركي">🇩🇰 ${tr('Danish', 'دانماركي')}</option>
           <option value="فنلندي">🇫🇮 ${tr('Finnish', 'فنلندي')}</option>
           <option value="بولندي">🇵🇱 ${tr('Polish', 'بولندي')}</option>
           <option value="روسي">🇷🇺 ${tr('Russian', 'روسي')}</option>
@@ -3215,7 +3357,7 @@ window.printLabBarcode = (orderId, patientName, testType) => {
     @media print{body{padding:5px}.label{border:2px solid #000}}
     </style></head><body>
     <div class="label">
-      <div class="clinic">نما الطبي - Nama Medical</div>
+      <div class="clinic">المركز الطبي - Medical Center</div>
       <div style="margin:10px 0">${svgData}</div>
       <div class="patient">👤 ${patientName}</div>
       <div class="test">🔬 ${testType}</div>
@@ -3587,7 +3729,7 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;padding:10px;direction:rtl;f
   <button onclick="window.close()" style="padding:10px 20px;font-size:14px;background:#dc3545;color:#fff;border:none;border-radius:8px;cursor:pointer;margin-right:8px">✕</button>
 </div>
 <div class="label">
-  <div class="clinic">💊 نما الطبي — الصيدلية<br><small style="font-size:11px;color:#666">Nama Medical — Pharmacy</small></div>
+  <div class="clinic">💊 المركز الطبي — الصيدلية<br><small style="font-size:11px;color:#666">Medical Center — Pharmacy</small></div>
   <div class="barcode-area">${svgData}</div>
   <div class="info-grid">
     <span class="lk">👤 المريض / Patient:</span><span>${patientName}</span>
@@ -3611,7 +3753,7 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;padding:10px;direction:rtl;f
       <td>${dur || '-'}</td>
     </tr></tbody>
   </table>
-  <div class="footer">Rx #${rxId} | ${new Date().toLocaleDateString('en-CA')} | نما الطبي</div>
+  <div class="footer">Rx #${rxId} | ${new Date().toLocaleDateString('en-CA')} | المركز الطبي</div>
 </div>
 <script>setTimeout(()=>{window.print();},400);<\\/script>
 </body></html>`);
@@ -3692,7 +3834,7 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;padding:10px;direction:rtl;f
   <button onclick="window.close()" style="padding:10px 20px;font-size:14px;background:#dc3545;color:#fff;border:none;border-radius:8px;cursor:pointer;margin-right:8px">✕</button>
 </div>
 <div class="inv">
-  <div class="header"><h2>🏥 نما الطبي — فاتورة صيدلية</h2><div style="margin-bottom:12px"><button class="btn btn-sm" onclick="toggleCalendarView()" id="calToggleBtn" style="background:#e3f2fd;color:#1565c0">📅 ${tr("Calendar View", "عرض التقويم")}</button></div><div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap"><button class="btn btn-primary" onclick="callNextPatient()" style="padding:8px 20px;font-size:15px;animation:pulse 2s infinite">🔔 ${tr("Next Patient", "المريض التالي")}</button><button class="btn btn-sm" onclick="loadMyQueue()" style="background:#e3f2fd;color:#1565c0">📋 ${tr("My Queue", "طابوري")}</button></div><small>Nama Medical — Pharmacy Invoice</small></div>
+  <div class="header"><h2>🏥 المركز الطبي — فاتورة صيدلية</h2><div style="margin-bottom:12px"><button class="btn btn-sm" onclick="toggleCalendarView()" id="calToggleBtn" style="background:#e3f2fd;color:#1565c0">📅 ${tr("Calendar View", "عرض التقويم")}</button></div><div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap"><button class="btn btn-primary" onclick="callNextPatient()" style="padding:8px 20px;font-size:15px;animation:pulse 2s infinite">🔔 ${tr("Next Patient", "المريض التالي")}</button><button class="btn btn-sm" onclick="loadMyQueue()" style="background:#e3f2fd;color:#1565c0">📋 ${tr("My Queue", "طابوري")}</button></div><small>Medical Center — Pharmacy Invoice</small></div>
   <div class="row"><span class="k">📄 رقم الفاتورة:</span><span>RX-${rxId}</span></div>
   <div class="row"><span class="k">👤 المريض:</span><span>${patientName}</span></div>
   <div class="row"><span class="k">📅 التاريخ:</span><span>${new Date().toLocaleDateString('ar-SA')} — ${new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</span></div>
@@ -3703,7 +3845,7 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;padding:10px;direction:rtl;f
   <div class="total-box">💰 الإجمالي: ${price || 0} ر.س</div>
   <div class="row"><span class="k">💳 طريقة الدفع:</span><span>${payAr} (${payMethod || 'Cash'})</span></div>
   <div class="row"><span class="k">✅ الحالة:</span><span style="color:green;font-weight:bold">مدفوع — Paid</span></div>
-  <div class="footer">نما الطبي | ${new Date().toLocaleDateString('en-CA')} | شكراً لكم</div>
+  <div class="footer">المركز الطبي | ${new Date().toLocaleDateString('en-CA')} | شكراً لكم</div>
 </div>
 <script>setTimeout(()=>{window.print();},400);<\\/script>
 </body></html>`);
@@ -3825,11 +3967,36 @@ async function renderFinance(el) {
       <div class="card" style="padding:20px"><h4 style="margin:0 0 12px">${tr('Revenue Trend', 'منحنى الإيرادات')}</h4><canvas id="finRevenueChart" height="200"></canvas></div>
       <div class="card" style="padding:20px"><h4 style="margin:0 0 12px">${tr('By Service', 'حسب الخدمة')}</h4><canvas id="finServiceChart" height="200"></canvas></div>
     </div>
-    <div class="card" style="padding:20px;margin-top:16px">
-      <h4 style="margin:0 0 12px">${tr('Recent Invoices', 'الفواتير الأخيرة')}</h4>
-      <div id="finTable"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+      <div class="card" style="padding:20px">
+        <h4 style="margin:0 0 12px">${tr('Recent Invoices', 'الفواتير الأخيرة')}</h4>
+        <div id="finTable"></div>
+      </div>
+      <div class="card" style="padding:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <h4 style="margin:0">${tr('Procedure Costing', 'تكاليف الإجراءات')}</h4>
+            <button class="btn btn-primary btn-sm" onclick="showAddCostModal()">+ ${tr('Add Cost', 'إضافة تكلفة')}</button>
+        </div>
+        <div id="costsTable"></div>
+      </div>
     </div>`;
   loadFinance();
+
+  window.showAddCostModal = () => {
+      const html = '<div class="form-group"><label>' + tr('Procedure Name', 'اسم الإجراء') + '</label><input id="fcName" class="form-input"></div>' +
+                   '<div class="form-group"><label>' + tr('Department', 'القسم') + '</label><input id="fcDept" class="form-input"></div>' +
+                   '<div class="form-group"><label>' + tr('Base Cost (SAR)', 'التكلفة الأساسية') + '</label><input type="number" id="fcBase" class="form-input" value="0"></div>' +
+                   '<div class="form-group"><label>' + tr('Consumables Cost (SAR)', 'تكلفة المستهلكات') + '</label><input type="number" id="fcConsum" class="form-input" value="0"></div>' +
+                   '<button class="btn btn-primary w-full" onclick="saveProcedureCost()">💾 ' + tr('Save', 'حفظ') + '</button>';
+      showModal(tr('Add Procedure Cost', 'إضافة تكلفة إجراء'), html);
+  };
+  window.saveProcedureCost = async () => {
+      try {
+          await API.post('/api/finance/procedure-costs', { procedure_name: document.getElementById('fcName').value, department: document.getElementById('fcDept').value, base_cost: document.getElementById('fcBase').value, consumables_cost: document.getElementById('fcConsum').value });
+          showToast(tr('Cost Added!', 'تمت إضافة التكلفة!'));
+          document.querySelector('.modal-overlay')?.remove(); navigateTo(currentPage);
+      } catch(e) { showToast('Error', 'error'); }
+  };
 
   window.loadFinance = async () => {
     const from = document.getElementById('finFrom')?.value || '';
@@ -3851,14 +4018,24 @@ async function renderFinance(el) {
         const svcCtx = document.getElementById('finServiceChart');
         if (svcCtx && data.byService?.length > 0) { Chart.getChart(svcCtx)?.destroy(); new Chart(svcCtx, { type: 'doughnut', data: { labels: data.byService.map(s => s.service), datasets: [{ data: data.byService.map(s => parseFloat(s.amount)), backgroundColor: ['#1a73e8', '#34a853', '#fbbc04', '#ea4335', '#ff6d01', '#46bdc6', '#7baaf7', '#f07b72', '#fcd04f', '#71c287'] }] }, options: { responsive: true, plugins: { legend: { position: 'right', labels: { font: { size: 11 } } } } } }); }
       }
-      // Load invoices table
-      const invoices = await API.get('/api/invoices');
+      // Load invoices and procedure costs
+      const [invoices, costs] = await Promise.all([
+        API.get('/api/invoices').catch(() => []),
+        API.get('/api/finance/procedure-costs').catch(() => [])
+      ]);
       window._finInvoices = invoices;
       const ft = document.getElementById('finTable');
       if (ft && invoices.length) {
         createTable(ft, 'finTbl',
-          [tr('#', '#'), tr('Patient', 'المريض'), tr('Service', 'الخدمة'), tr('Amount', 'المبلغ'), tr('Status', 'الحالة'), tr('Date', 'التاريخ')],
-          invoices.slice(0, 50).map(i => ({ cells: [i.invoice_number || i.id, i.patient_name || '', i.description || i.service_type || '', parseFloat(i.total || 0).toFixed(2) + ' ' + tr('SAR', 'ريال'), statusBadge(i.paid ? 'Paid' : 'Unpaid'), i.created_at ? new Date(i.created_at).toLocaleDateString('ar-SA') : ''], id: i.id }))
+          [tr('#', '#'), tr('Patient', 'المريض'), tr('Amount', 'المبلغ'), tr('Status', 'الحالة')],
+          invoices.slice(0, 50).map(i => ({ cells: [i.invoice_number || i.id, i.patient_name || '', parseFloat(i.total || 0).toFixed(2) + ' ' + tr('SAR', 'ريال'), statusBadge(i.paid ? 'Paid' : 'Unpaid')], id: i.id }))
+        );
+      }
+      const ct = document.getElementById('costsTable');
+      if (ct) {
+        ct.innerHTML = makeTable(
+          [tr('Procedure', 'الإجراء'), tr('Department', 'القسم'), tr('Total Cost', 'التكلفة الإجمالية')],
+          costs.map(c => ({ cells: [c.procedure_name, c.department, '<strong style="color:#d32f2f">' + c.total_cost + ' SAR</strong>'] }))
         );
       }
     } catch (e) { console.error(e); }
@@ -4610,8 +4787,8 @@ async function renderSettings(el) {
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
       <div class="card" style="padding:20px">
         <h4 style="margin:0 0 16px">🏥 ${tr('Hospital Information', 'معلومات المستشفى')}</h4>
-        <div class="form-group"><label>${tr('Hospital Name (AR)', 'اسم المستشفى (عربي)')}</label><input class="form-input" id="setNameAr" value="نما الطبي"></div>
-        <div class="form-group"><label>${tr('Hospital Name (EN)', 'اسم المستشفى (إنجليزي)')}</label><input class="form-input" id="setNameEn" value="Nama Medical"></div>
+        <div class="form-group"><label>${tr('Hospital Name (AR)', 'اسم المستشفى (عربي)')}</label><input class="form-input" id="setNameAr" value="المركز الطبي"></div>
+        <div class="form-group"><label>${tr('Hospital Name (EN)', 'اسم المستشفى (إنجليزي)')}</label><input class="form-input" id="setNameEn" value="Medical Center"></div>
         <div class="form-group"><label>${tr('Phone', 'الهاتف')}</label><input class="form-input" id="setPhone"></div>
         <div class="form-group"><label>${tr('Email', 'البريد')}</label><input class="form-input" id="setEmail"></div>
         <div class="form-group"><label>${tr('Address', 'العنوان')}</label><textarea class="form-input" id="setAddress" rows="2"></textarea></div>
@@ -5371,8 +5548,8 @@ window.printConsentForm = async (formId) => {
       } catch (e) { /* fall through to legacy print */ }
     }
     // Legacy text-based print (fallback)
-    const hospitalAr = settings.company_name_ar || 'نما الطبي';
-    const hospitalEn = settings.company_name_en || 'Nama Medical';
+    const hospitalAr = settings.company_name_ar || 'المركز الطبي';
+    const hospitalEn = settings.company_name_en || 'Medical Center';
     const phone = settings.phone || '';
     const address = settings.address || '';
     const taxNum = settings.tax_number || '';
@@ -6112,18 +6289,19 @@ let qTab = 'incidents';
 async function renderQuality(el) {
   const content = el;
 
-  const [incidents, satisfaction, kpis] = await Promise.all([
+  const [incidents, surveys, kpis] = await Promise.all([
     API.get('/api/quality/incidents').catch(() => []),
-    API.get('/api/quality/satisfaction').catch(() => []),
+    API.get('/api/quality/surveys').catch(() => []),
     API.get('/api/quality/kpis').catch(() => [])
   ]);
-  const avgSat = satisfaction.length ? (satisfaction.reduce((s, x) => s + (x.rating || 0), 0) / satisfaction.length).toFixed(1) : 'N/A';
+  const avgSat = surveys.length ? (surveys.reduce((s, x) => s + (x.rating || 0), 0) / surveys.length).toFixed(1) : '5.0';
 
   content.innerHTML = `
     <h2>${tr('Quality & Safety', 'الجودة والسلامة')}</h2>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px">
       <div class="card" style="padding:16px;text-align:center;background:#fce4ec"><h3 style="margin:0;color:#c62828">${incidents.length}</h3><p style="margin:4px 0 0;font-size:12px">${tr('Incidents', 'حوادث')}</p></div>
-      <div class="card" style="padding:16px;text-align:center;background:#e3f2fd"><h3 style="margin:0;color:#1565c0">${avgSat}</h3><p style="margin:4px 0 0;font-size:12px">${tr('Avg Satisfaction', 'متوسط الرضا')}</p></div>
+      <div class="card" style="padding:16px;text-align:center;background:#e3f2fd"><h3 style="margin:0;color:#1565c0">${avgSat} / 5</h3><p style="margin:4px 0 0;font-size:12px">${tr('Avg Satisfaction', 'متوسط الرضا')}</p></div>
+      <div class="card" style="padding:16px;text-align:center;background:#fff8e1"><h3 style="margin:0;color:#f57f17">${surveys.length}</h3><p style="margin:4px 0 0;font-size:12px">${tr('Total Surveys', 'استبيانات المرضى')}</p></div>
       <div class="card" style="padding:16px;text-align:center;background:#e8f5e9"><h3 style="margin:0;color:#2e7d32">${kpis.length}</h3><p style="margin:4px 0 0;font-size:12px">${tr('Active KPIs', 'مؤشرات نشطة')}</p></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
@@ -6141,6 +6319,13 @@ async function renderQuality(el) {
         <h4 style="margin:0 0 12px">${tr('Recent Incidents', 'الحوادث الأخيرة')}</h4>
         <div id="qiTable"></div>
       </div>
+    </div>
+    <div class="card" style="padding:20px;margin-top:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <h4 style="margin:0">${tr('Patient Surveys', 'استبيانات المرضى')}</h4>
+            <button class="btn btn-primary" onclick="showAddSurveyModal()">+ ${tr('Add Survey', 'إضافة استبيان')}</button>
+        </div>
+        <div id="surveyTable"></div>
     </div>`;
 
   const qit = document.getElementById('qiTable');
@@ -6150,8 +6335,32 @@ async function renderQuality(el) {
       incidents.map(i => ({ cells: [i.type || i.incident_type || '', '<span style="padding:2px 8px;border-radius:4px;font-size:11px;background:' + (i.severity === 'critical' ? '#212121' : i.severity === 'high' ? '#c62828' : i.severity === 'medium' ? '#e65100' : '#2e7d32') + ';color:#fff">' + (i.severity || '') + '</span>', i.department || '', statusBadge(i.status), i.created_at ? new Date(i.created_at).toLocaleDateString('ar-SA') : ''], id: i.id }))
     );
   }
+  
+  const svt = document.getElementById('surveyTable');
+  if (svt) {
+    createTable(svt, 'svTbl',
+      [tr('Patient ID', 'رقم المريض'), tr('Department', 'القسم'), tr('Rating', 'التقييم'), tr('Feedback', 'التعليق'), tr('Date', 'التاريخ')],
+      surveys.map(s => ({ cells: [s.patient_id || '-', s.department || '-', '⭐'.repeat(s.rating || 5), s.feedback || '-', s.created_at ? new Date(s.created_at).toLocaleDateString('ar-SA') : '-'], id: s.id }))
+    );
+  }
+
   window.saveQIncident = async () => { try { await API.post('/api/quality/incidents', { incident_type: document.getElementById('qiType').value, severity: document.getElementById('qiSeverity').value, department: document.getElementById('qiDept').value, description: document.getElementById('qiDesc').value }); showToast(tr('Incident reported!', 'تم الإبلاغ!')); navigateTo(currentPage); } catch (e) { showToast(tr('Error', 'خطأ'), 'error'); } };
 
+  window.showAddSurveyModal = () => {
+      const html = '<div class="form-group"><label>' + tr('Patient ID', 'رقم المريض') + '</label><input type="number" id="psPatient" class="form-input"></div>' +
+                   '<div class="form-group"><label>' + tr('Department', 'القسم') + '</label><input id="psDept" class="form-input"></div>' +
+                   '<div class="form-group"><label>' + tr('Rating (1-5)', 'التقييم') + '</label><input type="number" min="1" max="5" value="5" id="psRating" class="form-input"></div>' +
+                   '<div class="form-group"><label>' + tr('Feedback', 'التعليق') + '</label><textarea id="psFeedback" class="form-input" rows="2"></textarea></div>' +
+                   '<button class="btn btn-primary w-full" onclick="saveSurvey()">💾 ' + tr('Save', 'حفظ') + '</button>';
+      showModal(tr('Add Survey', 'إضافة استبيان'), html);
+  };
+  window.saveSurvey = async () => {
+      try {
+          await API.post('/api/quality/surveys', { patient_id: document.getElementById('psPatient').value, department: document.getElementById('psDept').value, rating: document.getElementById('psRating').value, feedback: document.getElementById('psFeedback').value });
+          showToast(tr('Survey Added!', 'تمت إضافة الاستبيان!'));
+          document.querySelector('.modal-overlay')?.remove(); navigateTo(currentPage);
+      } catch(e) { showToast('Error', 'error'); }
+  };
 }
 window.reportIncident = async function () {
   try { await API.post('/api/quality/incidents', { incident_type: document.getElementById('qiType').value, severity: document.getElementById('qiSeverity').value, department: document.getElementById('qiDept').value, description: document.getElementById('qiDesc').value, immediate_action: document.getElementById('qiAction').value, reported_by: currentUser?.display_name }); showToast(tr('Reported!', 'تم التسجيل!')); await navigateTo(27); } catch (e) { showToast(tr('Error', 'خطأ'), 'error'); }
@@ -6220,6 +6429,7 @@ window.addEquipment = async function () {
 
 // ===== TRANSPORT =====
 async function renderTransport(el) {
+  const content = el;
 
   const requests = await API.get('/api/transport/requests').catch(() => []);
   content.innerHTML = `
@@ -6511,53 +6721,249 @@ window.approvePortalAppt = async function (id) { await API.put('/api/portal/appo
 window.rejectPortalAppt = async function (id) { await API.put('/api/portal/appointments/' + id, { status: 'Rejected' }); showToast(tr('Rejected', 'تم الرفض')); navigateTo(33); };
 
 // ===== ZATCA E-INVOICING =====
+let zatcaTab = 'invoices';
 async function renderZATCA(el) {
+  const content = el;
 
-  const invoices = await API.get('/api/zatca/invoices').catch(() => []);
+  const [invoices, settings] = await Promise.all([
+    API.get('/api/zatca/invoices').catch(() => []),
+    API.get('/api/zatca/settings').catch(() => ({}))
+  ]);
+
+  const submitted = invoices.filter(i => i.zatca_status === 'submitted').length;
+  const pending = invoices.filter(i => !i.zatca_status || i.zatca_status === 'pending' || i.zatca_status === 'ready').length;
+  const hasSettings = !!settings.tax_number;
+  const phaseTxt = settings.phase === '2' ? tr('Phase 2 (Digital Signature)', 'المرحلة 2 (توقيع رقمي)') : tr('Phase 1 (Simple QR)', 'المرحلة 1 (QR بسيط)');
+
   content.innerHTML = `
-    <h2>${tr('ZATCA E-Invoice', 'الفاتورة الإلكترونية - زاتكا')}</h2>
+    <h2>🧾 ${tr('ZATCA E-Invoice', 'الفاتورة الإلكترونية - زاتكا')}</h2>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px">
-      <div class="card" style="padding:16px;text-align:center;background:#e8f5e9"><h3 style="margin:0;color:#2e7d32">${invoices.filter?.(i => i.zatca_status === 'submitted')?.length || 0}</h3><p style="margin:4px 0 0;font-size:13px">${tr('Submitted', 'مرسلة')}</p></div>
-      <div class="card" style="padding:16px;text-align:center;background:#fff3e0"><h3 style="margin:0;color:#e65100">${invoices.filter?.(i => !i.zatca_status || i.zatca_status === 'pending')?.length || 0}</h3><p style="margin:4px 0 0;font-size:13px">${tr('Pending', 'بانتظار الإرسال')}</p></div>
-      <div class="card" style="padding:16px;text-align:center;background:#fce4ec"><h3 style="margin:0;color:#c62828">${invoices.filter?.(i => i.zatca_status === 'rejected')?.length || 0}</h3><p style="margin:4px 0 0;font-size:13px">${tr('Rejected', 'مرفوضة')}</p></div>
+      <div class="card" style="padding:16px;text-align:center;background:linear-gradient(135deg,#e8f5e9,#c8e6c9)"><h3 style="margin:0;color:#2e7d32">${submitted}</h3><p style="margin:4px 0 0;font-size:13px">${tr('Submitted', 'مرسلة')}</p></div>
+      <div class="card" style="padding:16px;text-align:center;background:linear-gradient(135deg,#fff3e0,#ffe0b2)"><h3 style="margin:0;color:#e65100">${pending}</h3><p style="margin:4px 0 0;font-size:13px">${tr('Pending', 'بانتظار الإرسال')}</p></div>
+      <div class="card" style="padding:16px;text-align:center;background:linear-gradient(135deg,#e3f2fd,#bbdefb)"><h3 style="margin:0;color:#1565c0">${invoices.length}</h3><p style="margin:4px 0 0;font-size:13px">${tr('Total Invoices', 'إجمالي الفواتير')}</p></div>
+      <div class="card" style="padding:16px;text-align:center;background:${hasSettings ? 'linear-gradient(135deg,#e8f5e9,#a5d6a7)' : 'linear-gradient(135deg,#fce4ec,#ef9a9a)'}"><h3 style="margin:0;color:${hasSettings ? '#2e7d32' : '#c62828'}">${hasSettings ? '✅' : '❌'}</h3><p style="margin:4px 0 0;font-size:13px">${hasSettings ? phaseTxt : tr('Not Configured', 'غير مُعدّ')}</p></div>
     </div>
-    <div class="card" style="padding:20px;margin-bottom:16px">
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button class="btn ${zatcaTab === 'invoices' ? 'btn-primary' : ''}" onclick="zatcaTab='invoices';navigateTo(currentPage)" style="flex:1">🧾 ${tr('Invoices', 'الفواتير')}</button>
+      <button class="btn ${zatcaTab === 'settings' ? 'btn-primary' : ''}" onclick="zatcaTab='settings';navigateTo(currentPage)" style="flex:1">⚙️ ${tr('ZATCA Settings', 'إعدادات زاتكا')}</button>
+    </div>
+    <div id="zatcaContent"></div>`;
+
+  const zc = document.getElementById('zatcaContent');
+
+  if (zatcaTab === 'settings') {
+    zc.innerHTML = `
+    <div class="card" style="padding:24px">
+      <h3 style="margin:0 0 16px">⚙️ ${tr('ZATCA Settings', 'إعدادات زاتكا / هيئة الزكاة والضريبة والجمارك')}</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label>${tr('Seller Name (EN)', 'اسم البائع (إنجليزي)')}</label><input class="form-input" id="zSellerName" value="${settings.seller_name || ''}"></div>
+        <div class="form-group"><label>${tr('Seller Name (AR)', 'اسم البائع (عربي)')}</label><input class="form-input" id="zSellerNameAr" value="${settings.seller_name_ar || ''}"></div>
+        <div class="form-group"><label>🔢 ${tr('Tax Registration Number (TRN)', 'الرقم الضريبي')}</label><input class="form-input" id="zTaxNumber" value="${settings.tax_number || ''}" placeholder="3XXXXXXXXXX0003" maxlength="15"></div>
+        <div class="form-group"><label>${tr('Commercial Registration', 'السجل التجاري')}</label><input class="form-input" id="zCommReg" value="${settings.commercial_reg || ''}"></div>
+        <div class="form-group"><label>${tr('Street', 'الشارع')}</label><input class="form-input" id="zStreet" value="${settings.street || ''}"></div>
+        <div class="form-group"><label>${tr('Building Number', 'رقم المبنى')}</label><input class="form-input" id="zBldgNum" value="${settings.building_number || ''}"></div>
+        <div class="form-group"><label>${tr('District', 'الحي')}</label><input class="form-input" id="zDistrict" value="${settings.district || ''}"></div>
+        <div class="form-group"><label>${tr('City', 'المدينة')}</label><input class="form-input" id="zCity" value="${settings.city || ''}"></div>
+        <div class="form-group"><label>${tr('Postal Code', 'الرمز البريدي')}</label><input class="form-input" id="zPostal" value="${settings.postal_code || ''}"></div>
+        <div class="form-group"><label>${tr('Country', 'الدولة')}</label><input class="form-input" id="zCountry" value="${settings.country_code || 'SA'}" disabled></div>
+      </div>
+      <hr style="margin:16px 0;border:none;border-top:1px solid #e0e0e0">
+      <h4 style="margin:0 0 12px">🔐 ${tr('Phase & Certificates', 'المرحلة والشهادات')}</h4>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label>${tr('ZATCA Phase', 'مرحلة زاتكا')}</label>
+          <select class="form-input" id="zPhase">
+            <option value="1" ${(settings.phase || '1') === '1' ? 'selected' : ''}>${tr('Phase 1 - Simple QR (Tags 1-5)', 'المرحلة 1 - QR بسيط')}</option>
+            <option value="2" ${settings.phase === '2' ? 'selected' : ''}>${tr('Phase 2 - Digital Signature (Tags 1-9)', 'المرحلة 2 - توقيع رقمي')}</option>
+          </select>
+        </div>
+        <div class="form-group"><label>${tr('Invoice Type', 'نوع الفاتورة')}</label>
+          <select class="form-input" id="zInvType">
+            <option value="simplified" ${(settings.invoice_type || 'simplified') === 'simplified' ? 'selected' : ''}>${tr('Simplified (B2C)', 'مبسطة')}</option>
+            <option value="standard" ${settings.invoice_type === 'standard' ? 'selected' : ''}>${tr('Standard (B2B)', 'قياسية')}</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1"><label>${tr('Private Key (Base64) - Phase 2 only', 'المفتاح الخاص (Base64) - المرحلة 2 فقط')}</label><textarea class="form-input" id="zPrivKey" rows="3" placeholder="${tr('Paste ECDSA private key in Base64...', 'الصق المفتاح الخاص...')}">${settings.private_key_base64 || ''}</textarea></div>
+        <div class="form-group" style="grid-column:1/-1"><label>${tr('Certificate (Base64) - Phase 2 only', 'الشهادة (Base64) - المرحلة 2 فقط')}</label><textarea class="form-input" id="zCert" rows="3" placeholder="${tr('Paste X.509 certificate in Base64...', 'الصق الشهادة...')}">${settings.certificate_base64 || ''}</textarea></div>
+      </div>
+      <button class="btn btn-primary w-full" onclick="saveZatcaSettings()" style="height:48px;margin-top:12px;font-size:16px">💾 ${tr('Save ZATCA Settings', 'حفظ إعدادات زاتكا')}</button>
+    </div>`;
+  } else {
+    // Invoices tab
+    zc.innerHTML = `
+    <div class="card" style="padding:20px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <h4 style="margin:0">${tr('Invoices', 'الفواتير')}</h4>
+        <h4 style="margin:0">🧾 ${tr('Invoices with ZATCA QR', 'الفواتير مع باركود زاتكا')}</h4>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-sm" onclick="generateZATCA()" style="background:#e8f5e9;color:#2e7d32">📤 ${tr('Submit Selected', 'إرسال المحددة')}</button>
+          <button class="btn btn-sm" onclick="bulkSubmitZatca()" style="background:#e8f5e9;color:#2e7d32">📤 ${tr('Submit All Pending', 'إرسال الكل')}</button>
           <button class="btn btn-sm" onclick="exportToCSV(window._zatcaData||[],'zatca_invoices')" style="background:#e0f7fa;color:#00838f">📥 ${tr('Export', 'تصدير')}</button>
         </div>
       </div>
-      <div id="zatcaTable"></div>
+      ${!hasSettings ? '<div style="padding:12px;background:#fff3e0;border-radius:8px;border-right:4px solid #ff9800;margin-bottom:12px"><strong>⚠️ ' + tr('Please configure ZATCA settings first!', 'يرجى إعداد إعدادات زاتكا أولاً!') + '</strong></div>' : ''}
+      <div id="zatcaInvList"></div>
     </div>`;
 
-  window._zatcaData = invoices;
-  const zt = document.getElementById('zatcaTable');
-  if (zt && invoices.length > 0) {
-    createTable(zt, 'ztbl',
-      [tr('Invoice #', 'رقم الفاتورة'), tr('Patient', 'المريض'), tr('Amount', 'المبلغ'), tr('VAT', 'الضريبة'), tr('Date', 'التاريخ'), tr('Status', 'الحالة')],
-      invoices.map(i => ({
-        cells: [i.invoice_number || i.id, i.patient_name || '', parseFloat(i.total || 0).toFixed(2), parseFloat(i.vat_amount || 0).toFixed(2), i.created_at ? new Date(i.created_at).toLocaleDateString('ar-SA') : '', statusBadge(i.zatca_status || 'pending')],
-        id: i.id
-      }))
-    );
-  } else if (zt) { zt.innerHTML = '<p style="color:#999;text-align:center;padding:20px">' + tr('No invoices', 'لا توجد فواتير') + '</p>'; }
+    window._zatcaData = invoices;
+    const invList = document.getElementById('zatcaInvList');
+    if (invList && invoices.length) {
+      invList.innerHTML = invoices.slice(0, 50).map(inv => `
+        <div style="padding:14px;margin:8px 0;background:#f8f9fa;border-radius:12px;border-right:4px solid ${inv.zatca_status === 'submitted' ? '#4caf50' : '#ff9800'};display:flex;align-items:center;gap:16px">
+          <div id="qr_${inv.id}" style="min-width:80px;min-height:80px;display:flex;align-items:center;justify-content:center">${inv.qr_base64 ? '' : '<span style="color:#ccc;font-size:40px">📝</span>'}</div>
+          <div style="flex:1">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <strong style="font-size:15px">${inv.invoice_number || 'INV-' + inv.id}</strong>
+              <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${inv.zatca_status === 'submitted' ? '#e8f5e9' : '#fff3e0'};color:${inv.zatca_status === 'submitted' ? '#2e7d32' : '#e65100'}">${inv.zatca_status === 'submitted' ? tr('Submitted', 'مرسلة') : tr('Pending', 'بانتظار')}</span>
+            </div>
+            <div style="font-size:13px;color:#666;margin-top:4px">${inv.patient_name || ''} • ${parseFloat(inv.total || 0).toFixed(2)} SAR • ${tr('VAT', 'ضريبة')}: ${parseFloat(inv.vat_amount || 0).toFixed(2)}</div>
+            <div style="font-size:11px;color:#999;margin-top:2px">${inv.created_at ? new Date(inv.created_at).toLocaleString('ar-SA') : ''}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-direction:column">
+            <button class="btn btn-sm" onclick="printZatcaInvoice(${inv.id})" style="background:#e3f2fd;color:#1565c0;font-size:11px">🖨️ ${tr('Print', 'طباعة')}</button>
+            ${inv.zatca_status !== 'submitted' ? '<button class="btn btn-sm" onclick="submitSingleZatca(' + inv.id + ')" style="background:#e8f5e9;color:#2e7d32;font-size:11px">📤 ' + tr('Submit', 'إرسال') + '</button>' : ''}
+          </div>
+        </div>
+      `).join('');
 
-  window.generateZATCA = async () => {
-    showToast(tr('Generating ZATCA submission...', 'جاري إنشاء إرسال زاتكا...'));
-    try { await API.post('/api/zatca/generate', {}); showToast(tr('ZATCA submitted!', 'تم الإرسال لزاتكا!')); renderZATCA(content); } catch (e) { showToast(tr('Error', 'خطأ'), 'error'); }
+      // Generate QR codes
+      setTimeout(() => {
+        invoices.slice(0, 50).forEach(inv => {
+          if (inv.qr_base64) {
+            const qrEl = document.getElementById('qr_' + inv.id);
+            if (qrEl && typeof QRCode !== 'undefined') {
+              const canvas = document.createElement('canvas');
+              QRCode.toCanvas(canvas, inv.qr_base64, { width: 80, margin: 1 }, (err) => {
+                if (!err) { qrEl.innerHTML = ''; qrEl.appendChild(canvas); }
+              });
+            }
+          }
+        });
+      }, 200);
+    } else if (invList) {
+      invList.innerHTML = '<p style="color:#999;text-align:center;padding:20px">' + tr('No invoices yet', 'لا توجد فواتير بعد') + '</p>';
+    }
+  }
+
+  // === ZATCA Window Functions ===
+  window.saveZatcaSettings = async () => {
+    try {
+      await API.post('/api/zatca/settings', {
+        seller_name: document.getElementById('zSellerName').value,
+        seller_name_ar: document.getElementById('zSellerNameAr').value,
+        tax_number: document.getElementById('zTaxNumber').value,
+        commercial_reg: document.getElementById('zCommReg').value,
+        street: document.getElementById('zStreet').value,
+        building_number: document.getElementById('zBldgNum').value,
+        district: document.getElementById('zDistrict').value,
+        city: document.getElementById('zCity').value,
+        postal_code: document.getElementById('zPostal').value,
+        country_code: 'SA',
+        phase: document.getElementById('zPhase').value,
+        invoice_type: document.getElementById('zInvType').value,
+        private_key_base64: document.getElementById('zPrivKey').value,
+        certificate_base64: document.getElementById('zCert').value
+      });
+      showToast(tr('ZATCA settings saved!', 'تم حفظ إعدادات زاتكا!'));
+      zatcaTab = 'invoices';
+      navigateTo(currentPage);
+    } catch (e) { showToast(tr('Error saving', 'خطأ في الحفظ'), 'error'); }
   };
 
+  window.submitSingleZatca = async (id) => {
+    try {
+      await API.post('/api/zatca/submit/' + id, {});
+      showToast(tr('Submitted to ZATCA!', 'تم الإرسال لزاتكا!'));
+      navigateTo(currentPage);
+    } catch (e) { showToast(tr('Error', 'خطأ'), 'error'); }
+  };
+
+  window.bulkSubmitZatca = async () => {
+    const pendingIds = invoices.filter(i => i.zatca_status !== 'submitted').map(i => i.id);
+    if (!pendingIds.length) return showToast(tr('No pending invoices', 'لا توجد فواتير بانتظار'));
+    try {
+      await API.post('/api/zatca/bulk-submit', { invoice_ids: pendingIds });
+      showToast(tr('All invoices submitted!', 'تم إرسال جميع الفواتير!'));
+      navigateTo(currentPage);
+    } catch (e) { showToast(tr('Error', 'خطأ'), 'error'); }
+  };
+
+  window.printZatcaInvoice = async (id) => {
+    try {
+      const data = await API.get('/api/zatca/qr/' + id);
+      const inv = data.invoice;
+      const s = data.settings || settings;
+      const sellerName = s.seller_name || settings.seller_name_ar || '';
+
+      // Generate QR image
+      let qrDataUrl = '';
+      if (data.qr_base64 && typeof QRCode !== 'undefined') {
+        qrDataUrl = await QRCode.toDataURL(data.qr_base64, { width: 200, margin: 1 });
+      }
+
+      const win = window.open('', '_blank');
+      win.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>${tr('Invoice', 'فاتورة')} ${inv.invoice_number || inv.id}</title>
+      <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Tajawal',Arial,sans-serif;padding:20px;max-width:400px;margin:0 auto;font-size:14px}
+        .header{text-align:center;border-bottom:2px dashed #333;padding-bottom:12px;margin-bottom:12px}
+        .header h1{font-size:20px;margin-bottom:4px}
+        .header p{font-size:12px;color:#555}
+        .line{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dotted #ddd}
+        .line.total{border-top:2px solid #333;border-bottom:2px solid #333;font-weight:700;font-size:16px;padding:8px 0;margin-top:8px}
+        .qr{text-align:center;margin:16px 0;padding:12px;border:1px dashed #999;border-radius:8px}
+        .qr img{max-width:200px}
+        .footer{text-align:center;margin-top:12px;font-size:11px;color:#777}
+        .phase-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;background:#e3f2fd;color:#1565c0;margin-top:4px}
+        @media print{body{max-width:100%;padding:10px}}
+      </style></head><body>
+        <div class="header">
+          <h1>${settings.seller_name_ar || settings.seller_name || 'المركز الطبي'}</h1>
+          <p>${settings.seller_name || 'Medical Center'}</p>
+          ${settings.tax_number ? '<p>الرقم الضريبي: ' + settings.tax_number + '</p>' : ''}
+          ${settings.commercial_reg ? '<p>سجل تجاري: ' + settings.commercial_reg + '</p>' : ''}
+          <p>${[settings.street, settings.district, settings.city].filter(Boolean).join(' - ') || ''}</p>
+        </div>
+
+        <div style="text-align:center;margin-bottom:12px">
+          <strong style="font-size:18px">فاتورة ضريبية${settings.invoice_type === 'simplified' ? ' مبسطة' : ''}</strong><br>
+          <span style="font-size:12px">Tax Invoice${settings.invoice_type === 'simplified' ? ' (Simplified)' : ''}</span>
+        </div>
+
+        <div class="line"><span>${tr('Invoice #', 'رقم الفاتورة')}</span><span>${inv.invoice_number || 'INV-' + inv.id}</span></div>
+        <div class="line"><span>${tr('Date', 'التاريخ')}</span><span>${inv.created_at ? new Date(inv.created_at).toLocaleString('ar-SA') : ''}</span></div>
+        <div class="line"><span>${tr('Patient', 'المريض')}</span><span>${inv.patient_name || ''}</span></div>
+        <div class="line"><span>${tr('Service', 'الخدمة')}</span><span>${inv.description || inv.service_type || ''}</span></div>
+        <div class="line"><span>${tr('Amount (excl. VAT)', 'المبلغ بدون ضريبة')}</span><span>${(parseFloat(inv.total || 0) - parseFloat(inv.vat_amount || 0)).toFixed(2)} SAR</span></div>
+        <div class="line"><span>${tr('VAT (15%)', 'ضريبة القيمة المضافة 15%')}</span><span>${parseFloat(inv.vat_amount || 0).toFixed(2)} SAR</span></div>
+        <div class="line total"><span>${tr('Total', 'الإجمالي')}</span><span>${parseFloat(inv.total || 0).toFixed(2)} SAR</span></div>
+        <div class="line"><span>${tr('Payment', 'الدفع')}</span><span>${inv.payment_method || 'Cash'}</span></div>
+        <div class="line"><span>${tr('Status', 'الحالة')}</span><span>${inv.paid ? '✅ ' + tr('Paid', 'مدفوع') : '⏳ ' + tr('Unpaid', 'غير مدفوع')}</span></div>
+
+        <div class="qr">
+          ${qrDataUrl ? '<img src="' + qrDataUrl + '" alt="ZATCA QR Code"><br>' : ''}
+          <div class="phase-badge">${tr('ZATCA Phase', 'مرحلة زاتكا')} ${data.phase_used || '1'}</div>
+          <p style="font-size:10px;color:#999;margin-top:4px">${tr('Scan QR to verify invoice', 'امسح الباركود للتحقق من الفاتورة')}</p>
+        </div>
+
+        <div class="footer">
+          <p>${settings.seller_name_ar || 'المركز الطبي'} - ${settings.city || ''}</p>
+          <p>هذه فاتورة إلكترونية صادرة وفقاً لمتطلبات هيئة الزكاة والضريبة والجمارك</p>
+          <p>This is an electronic invoice issued per ZATCA regulations</p>
+        </div>
+
+        <script>setTimeout(()=>window.print(),500)<\/script>
+      </body></html>`);
+      win.document.close();
+    } catch (e) { showToast(tr('Error printing', 'خطأ في الطباعة'), 'error'); }
+  };
 }
+
 
 // ===== TELEMEDICINE =====
 let teleTab = 'sessions';
 async function renderTelemedicine(el) {
   const content = el;
 
-  const sessions = await API.get('/api/telemedicine/sessions').catch(() => []);
-  const active = sessions.filter(s => s.status === 'active').length;
+  const sessions = await API.get('/api/telehealth').catch(() => []);
+  const active = sessions.filter(s => s.status === 'active' || s.status === 'Active').length;
 
   content.innerHTML = `
     <h2>${tr('Telemedicine', 'الطب عن بُعد')}</h2>
@@ -6568,11 +6974,9 @@ async function renderTelemedicine(el) {
     <div style="display:grid;grid-template-columns:1fr 2fr;gap:16px">
       <div class="card" style="padding:20px">
         <h4 style="margin:0 0 12px">${tr('Schedule Session', 'جدولة جلسة')}</h4>
-        <div class="form-group"><label>${tr('Patient', 'المريض')}</label><input class="form-input" id="telePatient"></div>
-        <div class="form-group"><label>${tr('Doctor', 'الطبيب')}</label><input class="form-input" id="teleDoctor"></div>
+        <div class="form-group"><label>${tr('Patient ID', 'رقم المريض')}</label><input type="number" class="form-input" id="telePatientId"></div>
+        <div class="form-group"><label>${tr('Doctor ID', 'رقم الطبيب')}</label><input type="number" class="form-input" id="teleDoctorId"></div>
         <div class="form-group"><label>${tr('Date & Time', 'التاريخ والوقت')}</label><input type="datetime-local" class="form-input" id="teleDate"></div>
-        <div class="form-group"><label>${tr('Platform', 'المنصة')}</label>
-          <select class="form-input" id="telePlatform"><option value="zoom">Zoom</option><option value="teams">Microsoft Teams</option><option value="meet">Google Meet</option><option value="internal">${tr('Internal', 'داخلي')}</option></select></div>
         <div class="form-group"><label>${tr('Meeting Link', 'رابط الاجتماع')}</label><input class="form-input" id="teleLink" placeholder="https://..."></div>
         <div class="form-group"><label>${tr('Notes', 'ملاحظات')}</label><textarea class="form-input" id="teleNotes" rows="2"></textarea></div>
         <button class="btn btn-primary w-full" onclick="saveTeleSession()">📡 ${tr('Schedule', 'جدولة')}</button>
@@ -6586,12 +6990,16 @@ async function renderTelemedicine(el) {
   const tt = document.getElementById('teleTable');
   if (tt) {
     createTable(tt, 'teleTbl',
-      [tr('Patient', 'المريض'), tr('Doctor', 'الطبيب'), tr('Date', 'التاريخ'), tr('Platform', 'المنصة'), tr('Link', 'الرابط'), tr('Status', 'الحالة')],
-      sessions.map(s => ({ cells: [s.patient_name || '', s.doctor || '', s.session_date ? new Date(s.session_date).toLocaleString('ar-SA') : '', s.platform || '', s.meeting_link ? '<a href="' + s.meeting_link + '" target="_blank" style="color:#1a73e8">🔗 ' + tr('Join', 'انضمام') + '</a>' : '', statusBadge(s.status)], id: s.id }))
+      [tr('Patient ID', 'رقم المريض'), tr('Doctor ID', 'رقم الطبيب'), tr('Date', 'التاريخ'), tr('Link', 'الرابط'), tr('Status', 'الحالة')],
+      sessions.map(s => ({ cells: [s.patient_id || '-', s.doctor_id || '-', s.scheduled_time ? new Date(s.scheduled_time).toLocaleString('ar-SA') : '-', s.session_link ? '<a href="' + s.session_link + '" target="_blank" style="color:#1a73e8">🔗 ' + tr('Join', 'انضمام') + '</a>' : '-', statusBadge(s.status || 'Scheduled')], id: s.id }))
     );
   }
   window.saveTeleSession = async () => {
-    try { await API.post('/api/telemedicine/sessions', { patient_name: document.getElementById('telePatient').value, doctor: document.getElementById('teleDoctor').value, session_date: document.getElementById('teleDate').value, platform: document.getElementById('telePlatform').value, meeting_link: document.getElementById('teleLink').value, notes: document.getElementById('teleNotes').value }); showToast(tr('Session scheduled!', 'تم جدولة الجلسة!')); navigateTo(currentPage); } catch (e) { showToast(tr('Error', 'خطأ'), 'error'); }
+    try { 
+        await API.post('/api/telehealth', { patient_id: document.getElementById('telePatientId').value, doctor_id: document.getElementById('teleDoctorId').value, scheduled_time: document.getElementById('teleDate').value, session_link: document.getElementById('teleLink').value, notes: document.getElementById('teleNotes').value }); 
+        showToast(tr('Session scheduled!', 'تم جدولة الجلسة!')); 
+        navigateTo(currentPage); 
+    } catch (e) { showToast(tr('Error', 'خطأ'), 'error'); }
   };
 
 }
@@ -6686,6 +7094,7 @@ async function renderPathology(el) {
 
 // ===== SOCIAL WORK =====
 async function renderSocialWork(el) {
+  const content = el;
 
   const cases = await API.get('/api/social-work/cases').catch(() => []);
   content.innerHTML = `
@@ -6728,6 +7137,7 @@ async function renderSocialWork(el) {
 
 // ===== MORTUARY =====
 async function renderMortuary(el) {
+  const content = el;
 
   const cases = await API.get('/api/mortuary/cases').catch(() => []);
   content.innerHTML = `
@@ -7029,7 +7439,7 @@ window.printCosConsent = async function (id) {
   <div class="header">
     <h1>نموذج إقرار وموافقة على إجراء تجميلي</h1>
     <h2>Cosmetic Procedure Consent Form</h2>
-    <p style="margin:5px 0;color:#888">Nama Medical - نما الطبي</p>
+    <p style="margin:5px 0;color:#888">Medical Center - المركز الطبي</p>
   </div>
   <div class="section">
     <h3>📋 بيانات المريض / Patient Information</h3>
@@ -7073,3 +7483,251 @@ window.printCosConsent = async function (id) {
   </body></html>`);
   setTimeout(() => { w.print(); }, 500);
 };
+
+
+// ===== CONSULTATION (الكشف) =====
+async function renderConsultation(el) {
+  const content = el;
+  const [patients, services, settings] = await Promise.all([
+    API.get('/api/patients').catch(() => []),
+    API.get('/api/medical/services').catch(() => []),
+    API.get('/api/zatca/settings').catch(() => ({}))
+  ]);
+
+  // Get consultation services grouped by specialty
+  const consultations = services.filter(s => s.category === 'Consultation');
+  const specialties = [...new Set(consultations.map(s => s.specialty))];
+
+  const specNamesAr = {
+    'General Practice': 'الطب العام', 'Dentistry': 'طب الأسنان', 'Internal Medicine': 'الباطنية',
+    'Cardiology': 'القلب', 'Dermatology': 'الجلدية', 'Ophthalmology': 'العيون',
+    'ENT': 'الأنف والأذن والحنجرة', 'Orthopedics': 'العظام', 'Obstetrics': 'النساء والولادة',
+    'Pediatrics': 'الأطفال', 'Neurology': 'الأعصاب', 'Psychiatry': 'الطب النفسي',
+    'Urology': 'المسالك البولية', 'Endocrinology': 'الغدد الصماء', 'Gastroenterology': 'الجهاز الهضمي',
+    'Pulmonology': 'الصدرية', 'Nephrology': 'الكلى', 'Surgery': 'الجراحة العامة',
+    'Oncology': 'الأورام', 'Physiotherapy': 'العلاج الطبيعي', 'Nutrition': 'التغذية',
+    'Emergency': 'الطوارئ'
+  };
+
+  content.innerHTML = `
+    <div class="page-title">🩺 ${tr('Consultation', 'الكشف')}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <!-- Patient Search -->
+      <div class="card" style="padding:20px">
+        <div class="card-title">🔍 ${tr('Search Patient', 'البحث عن مريض')}</div>
+        <input class="form-input mb-12" id="csPatientSearch" placeholder="${tr('Search by name, ID, phone, file number...', 'ابحث بالاسم، الهوية، الجوال، رقم الملف...')}" oninput="filterConsultPatients()">
+        <div id="csPatientList" style="max-height:250px;overflow-y:auto"></div>
+        <div id="csSelectedPatient" style="display:none;margin-top:12px;padding:12px;background:linear-gradient(135deg,#e3f2fd,#bbdefb);border-radius:10px"></div>
+      </div>
+
+      <!-- Department & Fee -->
+      <div class="card" style="padding:20px">
+        <div class="card-title">🏥 ${tr('Select Department & Service', 'اختيار القسم والخدمة')}</div>
+        <div class="form-group mb-12">
+          <label>${tr('Department', 'القسم')}</label>
+          <select class="form-input" id="csDepartment" onchange="loadConsultServices()">
+            <option value="">${tr('-- Select Department --', '-- اختر القسم --')}</option>
+            ${specialties.map(s => `<option value="${s}">${isArabic ? (specNamesAr[s] || s) : s}</option>`).join('')}
+          </select>
+        </div>
+        <div id="csServicesList" style="margin-bottom:12px"></div>
+        <div id="csSelectedService" style="display:none;margin-bottom:12px;padding:12px;background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-radius:10px"></div>
+        <div class="form-group mb-12">
+          <label>${tr('Payment Method', 'طريقة الدفع')}</label>
+          <select class="form-input" id="csPayMethod">
+            <option value="Cash">${tr('Cash', 'نقدي')}</option>
+            <option value="Mada">${tr('Mada', 'مدى')}</option>
+            <option value="Visa/MC">${tr('Visa/MasterCard', 'فيزا/ماستركارد')}</option>
+            <option value="Insurance">${tr('Insurance', 'تأمين')}</option>
+            <option value="Bank Transfer">${tr('Bank Transfer', 'تحويل بنكي')}</option>
+          </select>
+        </div>
+        <button class="btn btn-primary w-full" onclick="createConsultInvoice()" style="height:48px;font-size:16px">💳 ${tr('Create Consultation Invoice', 'إنشاء فاتورة كشف')}</button>
+      </div>
+    </div>
+
+    <!-- Recent Consultations -->
+    <div class="card" style="padding:20px;margin-top:16px">
+      <div class="card-title">📋 ${tr('Consultation Fee by Department (from Catalog)', 'تسعيرة الكشف حسب القسم (من الأصناف)')}</div>
+      <table class="data-table">
+        <thead><tr>
+          <th>${tr('Department', 'القسم')}</th>
+          <th>${tr('Service', 'الخدمة')}</th>
+          <th>${tr('Arabic', 'عربي')}</th>
+          <th style="width:100px">${tr('Price', 'السعر')}</th>
+        </tr></thead>
+        <tbody>
+          ${consultations.map(c => `<tr>
+            <td><strong>${isArabic ? (specNamesAr[c.specialty] || c.specialty) : c.specialty}</strong></td>
+            <td>${c.name_en}</td>
+            <td>${c.name_ar || ''}</td>
+            <td style="font-weight:700;color:#2e7d32">${parseFloat(c.price || 0).toFixed(2)} SAR</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+
+  // Store data for window functions
+  window._csPatients = patients;
+  window._csServices = services;
+  window._csConsultations = consultations;
+  window._csSettings = settings;
+
+  // Filter patients
+  window.filterConsultPatients = () => {
+    const q = (document.getElementById('csPatientSearch')?.value || '').toLowerCase();
+    const list = document.getElementById('csPatientList');
+    if (!list || !q || q.length < 2) { list.innerHTML = ''; return; }
+    const filtered = patients.filter(p =>
+      (p.name_ar || '').toLowerCase().includes(q) ||
+      (p.name_en || '').toLowerCase().includes(q) ||
+      (p.national_id || '').includes(q) ||
+      (p.phone || '').includes(q) ||
+      String(p.file_number || '').includes(q)
+    ).slice(0, 10);
+    list.innerHTML = filtered.map(p => `
+      <div style="padding:8px 12px;margin:4px 0;background:#f5f5f5;border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="selectConsultPatient(${p.id})">
+        <div>
+          <strong>${p.file_number || ''}</strong> - ${isArabic ? (p.name_ar || p.name_en) : (p.name_en || p.name_ar)}
+          <span style="font-size:11px;color:#666"> | ${p.phone || ''}</span>
+        </div>
+        <span style="font-size:20px">☑️</span>
+      </div>
+    `).join('');
+  };
+
+  // Select patient
+  window.selectConsultPatient = (id) => {
+    const p = patients.find(pp => pp.id === id);
+    if (!p) return;
+    window._csSelectedPatient = p;
+    const el = document.getElementById('csSelectedPatient');
+    el.style.display = 'block';
+    el.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <strong style="font-size:16px">${isArabic ? (p.name_ar || p.name_en) : (p.name_en || p.name_ar)}</strong>
+          <div style="font-size:13px;color:#1565c0;margin-top:4px">📁 ${tr('File', 'ملف')}: ${p.file_number || p.id} | 📱 ${p.phone || '-'} | 🪪 ${p.national_id || '-'}</div>
+        </div>
+        <span style="font-size:28px">✅</span>
+      </div>`;
+    document.getElementById('csPatientList').innerHTML = '';
+    document.getElementById('csPatientSearch').value = isArabic ? (p.name_ar || p.name_en) : (p.name_en || p.name_ar);
+  };
+
+  // Load services for selected department
+  window.loadConsultServices = () => {
+    const dept = document.getElementById('csDepartment')?.value;
+    const list = document.getElementById('csServicesList');
+    if (!dept || !list) { list.innerHTML = ''; return; }
+    const deptServices = consultations.filter(s => s.specialty === dept);
+    list.innerHTML = deptServices.map(s => `
+      <div style="padding:10px;margin:4px 0;background:#f8f9fa;border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border:2px solid transparent;transition:all 0.2s" 
+           onmouseover="this.style.borderColor='#4caf50'" onmouseout="this.style.borderColor='transparent'" 
+           onclick="selectConsultService(${s.id})">
+        <div>
+          <strong>${isArabic ? (s.name_ar || s.name_en) : s.name_en}</strong>
+          <div style="font-size:11px;color:#666">${s.category} | ${isArabic ? (specNamesAr[s.specialty] || s.specialty) : s.specialty}</div>
+        </div>
+        <span style="font-weight:700;color:#2e7d32;font-size:16px">${parseFloat(s.price || 0).toFixed(2)} SAR</span>
+      </div>
+    `).join('');
+  };
+
+  // Select service
+  window.selectConsultService = (id) => {
+    const s = services.find(ss => ss.id === id);
+    if (!s) return;
+    window._csSelectedService = s;
+    const el = document.getElementById('csSelectedService');
+    el.style.display = 'block';
+    el.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <strong style="font-size:15px">✅ ${isArabic ? (s.name_ar || s.name_en) : s.name_en}</strong>
+          <div style="font-size:13px;color:#2e7d32;margin-top:4px">${tr('Price', 'السعر')}: <strong>${parseFloat(s.price || 0).toFixed(2)} SAR</strong> + ${tr('VAT 15%', 'ضريبة 15%')}: <strong>${(parseFloat(s.price || 0) * 0.15).toFixed(2)} SAR</strong> = <strong style="font-size:16px">${(parseFloat(s.price || 0) * 1.15).toFixed(2)} SAR</strong></div>
+        </div>
+      </div>`;
+  };
+
+  // Create consultation invoice
+  window.createConsultInvoice = async () => {
+    const patient = window._csSelectedPatient;
+    const service = window._csSelectedService;
+    if (!patient) return showToast(tr('Please select a patient', 'يرجى اختيار المريض'), 'error');
+    if (!service) return showToast(tr('Please select a service', 'يرجى اختيار الخدمة'), 'error');
+
+    const price = parseFloat(service.price || 0);
+    const nationality = patient.nationality || '';
+    const isExempt = (nationality === 'سعودي' || nationality.toLowerCase() === 'saudi');
+    const vatAmount = isExempt ? 0 : price * 0.15;
+    const total = price + vatAmount;
+    const payMethod = document.getElementById('csPayMethod')?.value || 'Cash';
+
+    try {
+      const inv = await API.post('/api/invoices', {
+        patient_id: patient.id,
+        patient_name: isArabic ? (patient.name_ar || patient.name_en) : (patient.name_en || patient.name_ar),
+        total: total.toFixed(2),
+        description: (isArabic ? (service.name_ar || service.name_en) : service.name_en) + ' - ' + service.specialty,
+        service_type: 'Consultation',
+        payment_method: payMethod,
+        discount: 0,
+        discount_reason: '',
+        original_amount: total.toFixed(2)
+      });
+
+      // Auto pay
+      await API.put('/api/invoices/' + inv.id + '/pay', { payment_method: payMethod });
+
+      showToast(tr('Consultation invoice created & paid!', 'تم إنشاء فاتورة الكشف ودفعها!'));
+
+      // Print ZATCA invoice
+      if (settings.tax_number) {
+        try {
+          const qrData = await API.get('/api/zatca/qr/' + inv.id);
+          let qrDataUrl = '';
+          if (qrData.qr_base64 && typeof QRCode !== 'undefined') {
+            qrDataUrl = await QRCode.toDataURL(qrData.qr_base64, { width: 180, margin: 1 });
+          }
+          const win = window.open('', '_blank');
+          win.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>${tr('Consultation Invoice', 'فاتورة كشف')}</title>
+          <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Tajawal',Arial,sans-serif;padding:15px;max-width:380px;margin:0 auto;font-size:13px}.header{text-align:center;border-bottom:2px dashed #333;padding-bottom:10px;margin-bottom:10px}.header h1{font-size:18px;margin-bottom:3px}.header p{font-size:11px;color:#555}.line{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dotted #ddd}.line.total{border-top:2px solid #333;border-bottom:2px solid #333;font-weight:700;font-size:15px;padding:6px 0;margin-top:6px}.qr{text-align:center;margin:12px 0;padding:10px;border:1px dashed #999;border-radius:8px}.qr img{max-width:180px}.footer{text-align:center;margin-top:10px;font-size:10px;color:#777}@media print{body{max-width:100%;padding:8px}}</style></head><body>
+          <div class="header">
+            <h1>${settings.seller_name_ar || settings.seller_name || 'المركز الطبي'}</h1>
+            <p>${settings.seller_name || 'Medical Center'}</p>
+            ${settings.tax_number ? '<p>الرقم الضريبي: ' + settings.tax_number + '</p>' : ''}
+            ${settings.commercial_reg ? '<p>سجل تجاري: ' + settings.commercial_reg + '</p>' : ''}
+            <p>${[settings.street, settings.district, settings.city].filter(Boolean).join(' - ') || ''}</p>
+          </div>
+          <div style="text-align:center;margin-bottom:8px"><strong style="font-size:16px">فاتورة كشف${settings.invoice_type === 'simplified' ? ' مبسطة' : ''}</strong></div>
+          <div class="line"><span>رقم الفاتورة</span><span>${inv.invoice_number || 'INV-' + inv.id}</span></div>
+          <div class="line"><span>التاريخ</span><span>${new Date().toLocaleString('ar-SA')}</span></div>
+          <div class="line"><span>المريض</span><span>${patient.name_ar || patient.name_en || ''}</span></div>
+          <div class="line"><span>رقم الملف</span><span>${patient.file_number || patient.id}</span></div>
+          <div class="line"><span>القسم</span><span>${specNamesAr[service.specialty] || service.specialty}</span></div>
+          <div class="line"><span>الخدمة</span><span>${service.name_ar || service.name_en}</span></div>
+          <div class="line"><span>المبلغ قبل الضريبة</span><span>${price.toFixed(2)} SAR</span></div>
+          <div class="line"><span>ضريبة القيمة المضافة 15%</span><span>${vatAmount.toFixed(2)} SAR</span></div>
+          <div class="line total"><span>الإجمالي</span><span>${total.toFixed(2)} SAR</span></div>
+          <div class="line"><span>طريقة الدفع</span><span>${payMethod}</span></div>
+          <div class="line"><span>الحالة</span><span>✅ مدفوع</span></div>
+          <div class="qr">
+            ${qrDataUrl ? '<img src="' + qrDataUrl + '" alt="ZATCA QR"><br>' : ''}
+            <p style="font-size:9px;color:#999;margin-top:4px">امسح الباركود للتحقق من الفاتورة</p>
+          </div>
+          <div class="footer">
+            <p>${settings.seller_name_ar || 'المركز الطبي'}</p>
+            <p>فاتورة إلكترونية - هيئة الزكاة والضريبة والجمارك</p>
+          </div>
+          <script>setTimeout(()=>window.print(),500)<\/script>
+          </body></html>`);
+          win.document.close();
+        } catch (e) { console.error('Print error:', e); }
+      }
+
+      navigateTo(currentPage);
+    } catch (e) { showToast(tr('Error creating invoice', 'خطأ في إنشاء الفاتورة'), 'error'); }
+  };
+}
+
