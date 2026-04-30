@@ -23,7 +23,7 @@ const FACILITY_ALLOWED = {
 
 const tr = (en, ar) => isArabic ? ar : en;
 
-// Navigation items
+// Navigation items with hierarchical grouping
 const NAV_ITEMS = [
   { icon: '📊', en: 'Dashboard', ar: 'لوحة التحكم' },
   { icon: '🏥', en: 'Reception', ar: 'الاستقبال' },
@@ -71,7 +71,64 @@ const NAV_ITEMS = [
   { icon: '🩺', en: 'Consultation', ar: 'الكشف' },
   { icon: '🏢', en: 'Departments Catalog', ar: 'دليل الأقسام' },
   { icon: '🛣️', en: 'Clinical Pathways', ar: 'المسارات السريرية' },
-  { icon: '🔬', en: 'Academic & Research', ar: 'البحث الأكاديمي' }
+  { icon: '🔬', en: 'Academic & Research', ar: 'البحث الأكاديمي' },
+  { icon: '🖥️', en: 'APP SERVER Portal', ar: 'بوابة التطبيقات' }
+];
+
+// ===== 3-Level Hierarchical Navigation (Epic/Cerner-grade) =====
+// Structure: Section (L0) → Group (L1) → Items (L2) → Sub-items (L3)
+const NAV_SECTIONS = [
+  { en: 'CLINICAL', ar: 'السريري' },
+  { en: 'OPERATIONS', ar: 'العمليات' },
+  { en: 'ADMIN & FINANCE', ar: 'الإدارة والمالية' },
+  { en: 'SYSTEM', ar: 'النظام' }
+];
+
+const NAV_GROUPS = [
+  // ── SECTION 0: CLINICAL ──
+  { section: 0, en: 'Dashboard', ar: 'لوحة التحكم', icon: '📊', items: [0], open: true },
+  { section: 0, en: 'Patient Flow', ar: 'تدفق المرضى', icon: '🏥', items: [1, 2, 12, 43], open: true,
+    l3: { 1: [{en:'Walk-in',ar:'بدون موعد'},{en:'Scheduled',ar:'بموعد'}], 2: [{en:'Calendar',ar:'التقويم'},{en:'No-show',ar:'الغياب'}] } },
+  { section: 0, en: 'Clinical Station', ar: 'المحطة السريرية', icon: '🩺', items: [3, 20, 21, 23], open: true,
+    l3: { 3: [{en:'CPOE Orders',ar:'الأوامر الطبية'},{en:'Progress Notes',ar:'ملاحظات التقدم'},{en:'Drug Alerts',ar:'تنبيهات الأدوية'}] } },
+  { section: 0, en: 'Nursing', ar: 'التمريض', icon: '👩‍⚕️', items: [11],
+    l3: { 11: [{en:'Vitals',ar:'العلامات الحيوية'},{en:'Flowsheets',ar:'أوراق المتابعة'},{en:'Pain & GCS',ar:'الألم والوعي'},{en:'I/O Balance',ar:'الداخل والخارج'}] } },
+  { section: 0, en: 'Emergency & ICU', ar: 'الطوارئ والعناية', icon: '🚨', items: [21, 23] },
+
+  // ── SECTION 1: OPERATIONS ──
+  { section: 1, en: 'Laboratory', ar: 'المختبر', icon: '🔬', items: [4],
+    l3: { 4: [{en:'New Orders',ar:'طلبات جديدة'},{en:'Results',ar:'النتائج'},{en:'Catalog',ar:'الكتالوج'},{en:'Pending',ar:'قيد الانتظار'}] } },
+  { section: 1, en: 'Radiology', ar: 'الأشعة', icon: '📡', items: [5],
+    l3: { 5: [{en:'Orders',ar:'الطلبات'},{en:'Images',ar:'الصور'},{en:'Reports',ar:'التقارير'}] } },
+  { section: 1, en: 'Pharmacy', ar: 'الصيدلية', icon: '💊', items: [6, 31, 16],
+    l3: { 6: [{en:'Dispense Queue',ar:'صرف الأدوية'},{en:'Stock',ar:'المخزون'},{en:'Drug Interactions',ar:'التداخلات'}] } },
+  { section: 1, en: 'Pathology', ar: 'علم الأمراض', icon: '🔬', items: [36] },
+  { section: 1, en: 'Surgery Center', ar: 'مركز العمليات', icon: '🏥', items: [18, 19, 24, 40],
+    l3: { 18: [{en:'Schedule',ar:'الجدول'},{en:'Pre-Op',ar:'ما قبل العملية'},{en:'Tracking',ar:'التتبع'}] } },
+  { section: 1, en: 'Blood Bank', ar: 'بنك الدم', icon: '🩸', items: [19] },
+  { section: 1, en: 'Support Services', ar: 'الخدمات المساندة', icon: '🔧', items: [25, 26, 24, 28, 29, 32],
+    l3: { 25: [{en:'Menu Plans',ar:'الوجبات'}], 26: [{en:'Surveillance',ar:'المراقبة'},{en:'Reports',ar:'التقارير'}] } },
+
+  // ── SECTION 2: ADMIN & FINANCE ──
+  { section: 2, en: 'Finance', ar: 'المالية', icon: '💰', items: [8, 13, 34],
+    l3: { 8: [{en:'Invoices',ar:'الفواتير'},{en:'Payments',ar:'المدفوعات'},{en:'Revenue',ar:'الإيرادات'}], 34: [{en:'E-Invoicing',ar:'الفوترة الإلكترونية'},{en:'ZATCA Reports',ar:'تقارير زاتكا'}] } },
+  { section: 2, en: 'Insurance', ar: 'التأمين', icon: '🛡️', items: [9],
+    l3: { 9: [{en:'Companies',ar:'الشركات'},{en:'NPHIES',ar:'نفيس'},{en:'Claims',ar:'المطالبات'},{en:'Eligibility',ar:'الأهلية'}] } },
+  { section: 2, en: 'Human Resources', ar: 'الموارد البشرية', icon: '🏢', items: [7],
+    l3: { 7: [{en:'Employees',ar:'الموظفين'},{en:'Attendance',ar:'الحضور'},{en:'Payroll',ar:'الرواتب'}] } },
+  { section: 2, en: 'Inventory', ar: 'المخازن', icon: '📦', items: [10, 17],
+    l3: { 10: [{en:'Stock',ar:'المخزون'},{en:'Purchase Orders',ar:'أوامر الشراء'},{en:'Dept Requests',ar:'طلبات الأقسام'}] } },
+  { section: 2, en: 'Reports', ar: 'التقارير', icon: '📋', items: [14, 27, 30],
+    l3: { 14: [{en:'Daily Reports',ar:'التقارير اليومية'},{en:'Statistics',ar:'الإحصائيات'},{en:'Export',ar:'تصدير'}] } },
+
+  // ── SECTION 3: SYSTEM ──
+  { section: 3, en: 'Digital Health', ar: 'الصحة الرقمية', icon: '📱', items: [33, 35, 47],
+    l3: { 35: [{en:'Video Consult',ar:'استشارة مرئية'}] } },
+  { section: 3, en: 'Compliance', ar: 'الامتثال', icon: '🇸🇦', items: [34],
+    l3: { 34: [{en:'ZATCA P2',ar:'زاتكا'},{en:'NPHIES',ar:'نفيس'},{en:'Wasfaty',ar:'وصفتي'},{en:'Yaqeen',ar:'يقين'}] } },
+  { section: 3, en: 'Quality & Safety', ar: 'الجودة والسلامة', icon: '📊', items: [26, 27, 44, 39],
+    l3: { 27: [{en:'KPIs',ar:'مؤشرات الأداء'},{en:'Accreditation',ar:'الاعتماد'}] } },
+  { section: 3, en: 'Settings', ar: 'الإعدادات', icon: '⚙️', items: [42, 46, 15, 38] },
 ];
 
 // ===== INIT =====
@@ -96,7 +153,16 @@ const NAV_ITEMS = [
 
   buildNav();
   setupEvents();
-  navigateTo(0);
+
+  // Hash-based routing: restore page from URL hash
+  const hashPage = parseInt(location.hash.replace('#page/', ''));
+  navigateTo(!isNaN(hashPage) && hashPage >= 0 ? hashPage : 0);
+
+  // Listen for hash changes (browser back/forward)
+  window.addEventListener('hashchange', () => {
+    const p = parseInt(location.hash.replace('#page/', ''));
+    if (!isNaN(p) && p !== currentPage) navigateTo(p);
+  });
 
   // Language: set direction
   document.documentElement.dir = isArabic ? 'rtl' : 'ltr';
@@ -112,21 +178,104 @@ function buildNav() {
   const nav = document.getElementById('navList');
   const userPerms = currentUser?.permissions ? currentUser.permissions.split(',') : [];
   const isAdmin = currentUser?.role === 'Admin';
+  const allowed = FACILITY_ALLOWED[facilityType];
+  const openGroups = JSON.parse(localStorage.getItem('namaNavGroups') || '{}');
 
-  nav.innerHTML = NAV_ITEMS.map((item, i) => {
-    const hasPerm = isAdmin || i === 0 || userPerms.includes(i.toString());
-    if (!hasPerm) return '';
-    // Filter by facility type
-    const allowed = FACILITY_ALLOWED[facilityType];
-    if (allowed && !allowed.includes(i)) return '';
-    return `<div class="nav-item${i === currentPage ? ' active' : ''}" data-page="${i}">
-      <span class="nav-icon">${item.icon}</span>
-      <span class="nav-label">${tr(item.en, item.ar)}</span>
+  let html = '';
+  let lastSection = -1;
+
+  NAV_GROUPS.forEach((group, gi) => {
+    // Filter items visible to this user
+    const visibleItems = group.items.filter(i => {
+      const hasPerm = isAdmin || i === 0 || userPerms.includes(i.toString());
+      if (!hasPerm) return false;
+      if (allowed && !allowed.includes(i)) return false;
+      return true;
+    });
+    if (!visibleItems.length) return;
+
+    // Render Section Title (L0) when section changes
+    if (group.section !== undefined && group.section !== lastSection) {
+      lastSection = group.section;
+      const sec = NAV_SECTIONS[group.section];
+      if (sec) {
+        html += `<div class="sidebar-section-title">${tr(sec.en, sec.ar)}</div>`;
+      }
+    }
+
+    const isOpen = openGroups[gi] !== undefined ? openGroups[gi] : (group.open || visibleItems.includes(currentPage));
+    const hasActive = visibleItems.includes(currentPage);
+
+    // L1: Group Header
+    html += `<div class="nav-group${isOpen ? ' open' : ''}${hasActive ? ' has-active' : ''}" data-group="${gi}" style="animation-delay:${gi * 30}ms">
+      <div class="nav-group-header" data-group="${gi}">
+        <span class="nav-group-icon">${group.icon}</span>
+        <span class="nav-group-label">${tr(group.en, group.ar)}</span>
+        <span class="nav-group-arrow">▸</span>
+      </div>
+      <div class="nav-group-items" style="${isOpen ? '' : 'max-height:0;overflow:hidden'}">
+        ${visibleItems.map(i => {
+          const item = NAV_ITEMS[i];
+          if (!item) return '';
+          const l3Items = group.l3 && group.l3[i] ? group.l3[i] : null;
+          let l3Html = '';
+          if (l3Items) {
+            l3Html = `<div class="nav-l3-container" style="${i === currentPage ? '' : 'max-height:0;overflow:hidden'}">
+              ${l3Items.map(sub => `<div class="nav-l3-item" data-page="${i}"><span class="nav-l3-label">${tr(sub.en, sub.ar)}</span></div>`).join('')}
+            </div>`;
+          }
+          return `<div class="nav-item${i === currentPage ? ' active' : ''}${l3Items ? ' has-children' : ''}" data-page="${i}">
+            <span class="nav-icon">${item.icon}</span>
+            <span class="nav-label">${tr(item.en, item.ar)}</span>
+          </div>${l3Html}`;
+        }).join('')}
+      </div>
     </div>`;
-  }).join('');
+  });
 
+  nav.innerHTML = html;
+
+  // Group toggle (L1)
+  nav.querySelectorAll('.nav-group-header').forEach(el => {
+    el.addEventListener('click', () => {
+      const g = el.closest('.nav-group');
+      const gi = el.dataset.group;
+      g.classList.toggle('open');
+      const items = g.querySelector('.nav-group-items');
+      if (g.classList.contains('open')) {
+        items.style.maxHeight = items.scrollHeight + 'px';
+        setTimeout(() => items.style.maxHeight = '', 300);
+      } else {
+        items.style.maxHeight = items.scrollHeight + 'px';
+        requestAnimationFrame(() => { items.style.maxHeight = '0'; items.style.overflow = 'hidden'; });
+      }
+      const saved = JSON.parse(localStorage.getItem('namaNavGroups') || '{}');
+      saved[gi] = g.classList.contains('open');
+      localStorage.setItem('namaNavGroups', JSON.stringify(saved));
+    });
+  });
+
+  // Page navigation (L2)
   nav.querySelectorAll('.nav-item').forEach(el => {
-    el.addEventListener('click', () => navigateTo(parseInt(el.dataset.page)));
+    el.addEventListener('click', () => {
+      navigateTo(parseInt(el.dataset.page));
+      // Expand L3 if exists
+      const l3 = el.nextElementSibling;
+      if (l3 && l3.classList.contains('nav-l3-container')) {
+        if (l3.style.maxHeight === '0px' || !l3.style.maxHeight) {
+          l3.style.maxHeight = l3.scrollHeight + 'px';
+          setTimeout(() => l3.style.maxHeight = '', 300);
+        }
+      }
+    });
+  });
+
+  // L3 sub-item click (navigate to parent page)
+  nav.querySelectorAll('.nav-l3-item').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      navigateTo(parseInt(el.dataset.page));
+    });
   });
 }
 
@@ -196,6 +345,32 @@ function setupEvents() {
   // Set initial search placeholder based on language
   const searchBox = document.getElementById('globalSearch');
   if (searchBox) searchBox.placeholder = isArabic ? 'بحث بالاسم، الهوية، الجوال، رقم الملف...' : 'Search by name, ID, phone, file number...';
+
+  // Sidebar nav search filter
+  const navSearchInput = document.createElement('input');
+  navSearchInput.type = 'text';
+  navSearchInput.className = 'form-input';
+  navSearchInput.placeholder = isArabic ? '🔍 بحث في القوائم...' : '🔍 Filter menu...';
+  navSearchInput.style.cssText = 'margin:8px 12px;width:calc(100% - 24px);font-size:12px;padding:8px 12px;border-radius:8px;background:var(--shell-glass);border:1px solid var(--shell-glass-border);color:var(--text)';
+  const navList = document.getElementById('navList');
+  if (navList && !document.getElementById('navFilterInput')) {
+    navSearchInput.id = 'navFilterInput';
+    navList.insertBefore(navSearchInput, navList.firstChild);
+    navSearchInput.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      document.querySelectorAll('.nav-group').forEach(g => {
+        const items = g.querySelectorAll('.nav-item');
+        let anyMatch = false;
+        items.forEach(it => {
+          const match = !q || it.textContent.toLowerCase().includes(q);
+          it.style.display = match ? '' : 'none';
+          if (match) anyMatch = true;
+        });
+        g.style.display = anyMatch || !q ? '' : 'none';
+        if (q && anyMatch) g.classList.add('open');
+      });
+    });
+  }
 }
 
 // ===== UPDATE SHELL LANGUAGE =====
@@ -248,6 +423,28 @@ async function navigateTo(page) {
   document.querySelectorAll('.nav-item').forEach((el, i) => el.classList.toggle('active', i === page));
   const item = NAV_ITEMS[page];
   document.getElementById('headerTitle').textContent = tr(item.en, item.ar);
+
+  // Hash routing — update URL without reload
+  if (location.hash !== '#page/' + page) history.replaceState(null, '', '#page/' + page);
+
+  // Breadcrumb — find which NAV_GROUPS section/group contains this page
+  const bc = document.getElementById('breadcrumb');
+  if (bc) {
+    const sectionNames = [
+      { en: 'Clinical', ar: 'السريري' },
+      { en: 'Operations', ar: 'العمليات' },
+      { en: 'Admin & Finance', ar: 'الإدارة والمالية' },
+      { en: 'System', ar: 'النظام' }
+    ];
+    let crumb = tr('Home', 'الرئيسية');
+    const grp = NAV_GROUPS.find(g => g.items && g.items.includes(page));
+    if (grp) {
+      const sec = sectionNames[grp.section] || sectionNames[0];
+      crumb += ` / ${tr(sec.en, sec.ar)} / ${tr(grp.en, grp.ar)}`;
+    }
+    bc.textContent = crumb;
+  }
+
   // Close sidebar on mobile after navigation
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('sidebarOverlay').classList.remove('show');
@@ -683,7 +880,7 @@ window.saveAntenatal = async (pregId, patientId) => {
 async function loadPage(page) {
   const el = document.getElementById('pageContent');
   el.style.animation = 'none'; el.offsetHeight; el.style.animation = '';
-  const pages = [renderDashboard, renderReception, renderAppointments, renderDoctor, renderLab, renderRadiology, renderPharmacy, renderHR, renderFinance, renderInsurance, renderInventory, renderNursing, renderWaitingQueue, renderPatientAccounts, renderReports, renderMessaging, renderCatalog, renderDeptRequests, renderSurgery, renderBloodBank, renderConsentForms, renderEmergency, renderInpatient, renderICU, renderCSSD, renderDietary, renderInfectionControl, renderQuality, renderMaintenance, renderTransport, renderMedicalRecords, renderClinicalPharmacy, renderRehabilitation, renderPatientPortal, renderZATCA, renderTelemedicine, renderPathology, renderSocialWork, renderMortuary, renderCME, renderCosmeticSurgery, renderOBGYN, renderSettings, renderConsultation, renderDepartmentsCatalog, renderClinicalPathways, renderAcademicResearch];
+  const pages = [renderDashboard, renderReception, renderAppointments, renderDoctor, renderLab, renderRadiology, renderPharmacy, renderHR, renderFinance, renderInsurance, renderInventory, renderNursing, renderWaitingQueue, renderPatientAccounts, renderReports, renderMessaging, renderCatalog, renderDeptRequests, renderSurgery, renderBloodBank, renderConsentForms, renderEmergency, renderInpatient, renderICU, renderCSSD, renderDietary, renderInfectionControl, renderQuality, renderMaintenance, renderTransport, renderMedicalRecords, renderClinicalPharmacy, renderRehabilitation, renderPatientPortal, renderZATCA, renderTelemedicine, renderPathology, renderSocialWork, renderMortuary, renderCME, renderCosmeticSurgery, renderOBGYN, renderSettings, renderConsultation, renderDepartmentsCatalog, renderClinicalPathways, renderAcademicResearch, renderAppServerPortal];
   if (pages[page]) await pages[page](el);
   else el.innerHTML = `<div class="page-title">${NAV_ITEMS[page]?.icon} ${tr(NAV_ITEMS[page]?.en, NAV_ITEMS[page]?.ar)}</div><div class="card"><p>${tr('Coming soon...', 'قريباً...')}</p></div>`;
 }
@@ -2298,6 +2495,15 @@ async function renderDoctor(el) {
   const svcCategories = {};
   filteredServices.forEach(s => { if (!svcCategories[s.category]) svcCategories[s.category] = []; svcCategories[s.category].push(s); });
   el.innerHTML = `
+    <div style="background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%); padding: 20px; border-radius: 12px; margin-bottom: 24px; color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+      <div>
+        <h2 style="margin: 0 0 8px; font-size: 20px;">🚀 ${tr('Adaptive Doctor Station (v3.0)', 'محطة الطبيب التكيفية (الإصدار الثالث)')}</h2>
+        <p style="margin: 0; font-size: 13px; opacity: 0.9;">${tr('A next-generation, glassmorphism UI featuring intelligent filtering, smart diagnoses, and digital consent.', 'واجهة زجاجية عصرية تدعم الفلترة الذكية للتشخيصات والتحاليل وإقرارات التوقيع الإلكتروني.')}</p>
+      </div>
+      <button onclick="window.launchAdaptiveUI()" style="background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);">
+        ${tr('Launch Adaptive UI', 'تشغيل المحطة التكيفية')}
+      </button>
+    </div>
     <div class="page-title">👨‍⚕️ ${tr('Doctor Station', 'محطة الطبيب')}</div>
     <div class="split-layout">
       <div>
@@ -2655,7 +2861,34 @@ margin-right:8px">${drSpecialty}</span>` : ''}</div>
             </div>
             <div class="form-group" style="flex:0.8;min-width:120px"><label>${tr('Duration', 'المدة')}</label><input class="form-input" id="drRxDur" placeholder="${tr('e.g. 7 days', 'مثلاً 7 أيام')}"></div>
           </div>
-          <button class="btn btn-primary w-full" onclick="sendRx()">💊 ${tr('Issue Prescription → Pharmacy', 'إصدار وصفة → الصيدلية')}</button>
+          <button class="btn btn-primary w-full" onclick="sendRx()" id="drRxBtn">💊 ${tr('Issue Prescription → Pharmacy', 'إصدار وصفة → الصيدلية')}</button>
+          <div id="ddiAlert" style="display:none;margin-top:12px;padding:14px;border-radius:12px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);animation:alertPulse 2s infinite">
+            <div style="font-weight:700;color:#ef4444;font-size:13px">⚠️ ${tr('DRUG INTERACTION WARNING', 'تحذير: تداخل دوائي')}</div>
+            <div id="ddiMessage" style="font-size:12px;color:var(--text);margin-top:6px"></div>
+            <button class="btn btn-sm btn-danger" onclick="document.getElementById('ddiAlert').style.display='none'" style="margin-top:8px">✓ ${tr('Acknowledge', 'إقرار')}</button>
+          </div>
+        </div>
+        <div class="card mb-16" style="border:1px solid rgba(139,92,246,0.2)">
+          <div class="card-title" style="color:#8b5cf6;border-bottom-color:rgba(139,92,246,0.15)">🧠 ${tr('Smart CPOE — Order Sets', 'الأوامر الذكية — باقات جاهزة')}</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:12px" id="cpoeOrderSets">
+            <button class="btn" onclick="applyCPOESet('dka')" style="height:auto;padding:10px;flex-direction:column;gap:2px;border-color:rgba(239,68,68,0.2)">
+              <span style="font-size:20px">🩸</span><span style="font-weight:700;font-size:12px">DKA</span><span style="font-size:10px;color:var(--text-dim)">${tr('Diabetic Ketoacidosis','الحماض الكيتوني')}</span>
+            </button>
+            <button class="btn" onclick="applyCPOESet('sepsis')" style="height:auto;padding:10px;flex-direction:column;gap:2px;border-color:rgba(245,158,11,0.2)">
+              <span style="font-size:20px">🦠</span><span style="font-weight:700;font-size:12px">Sepsis</span><span style="font-size:10px;color:var(--text-dim)">${tr('Sepsis Protocol','بروتوكول الإنتان')}</span>
+            </button>
+            <button class="btn" onclick="applyCPOESet('chest_pain')" style="height:auto;padding:10px;flex-direction:column;gap:2px;border-color:rgba(59,130,246,0.2)">
+              <span style="font-size:20px">💔</span><span style="font-weight:700;font-size:12px">ACS</span><span style="font-size:10px;color:var(--text-dim)">${tr('Acute Coronary','متلازمة شريانية')}</span>
+            </button>
+            <button class="btn" onclick="applyCPOESet('pneumonia')" style="height:auto;padding:10px;flex-direction:column;gap:2px;border-color:rgba(34,197,94,0.2)">
+              <span style="font-size:20px">🫁</span><span style="font-weight:700;font-size:12px">CAP</span><span style="font-size:10px;color:var(--text-dim)">${tr('Pneumonia','ذات الرئة')}</span>
+            </button>
+          </div>
+          <div id="cpoeSetPreview" style="display:none;padding:14px;border-radius:12px;background:rgba(139,92,246,0.05);border:1px solid rgba(139,92,246,0.1)">
+            <div id="cpoeSetName" style="font-weight:700;color:#8b5cf6;margin-bottom:8px"></div>
+            <div id="cpoeSetItems" style="font-size:12px"></div>
+            <button class="btn btn-primary" onclick="executeCPOESet()" style="margin-top:10px">⚡ ${tr('Execute All Orders', 'تنفيذ جميع الأوامر')}</button>
+          </div>
         </div>
         <div class="card mb-16">
           <div class="card-title">📋 ${tr('Medical Certificate', 'التقارير الطبية')}</div>
@@ -2901,6 +3134,98 @@ window.scheduleFollowup = async () => {
     showToast(tr('Follow-up booked!', 'تم حجز موعد المتابعة!'));
   } catch (e) { showToast(tr('Error', 'خطأ'), 'error'); }
 };
+
+// ===== CPOE ORDER SETS & DDI CHECK =====
+const CPOE_SETS = {
+  dka: { name: 'DKA Protocol', nameAr: 'بروتوكول الحماض الكيتوني', orders: [
+    { type:'lab', name:'CBC + BMP + ABG + HbA1c + Ketones' },
+    { type:'med', name:'Normal Saline 0.9%', dose:'1000ml IV bolus, then 250ml/hr' },
+    { type:'med', name:'Insulin Regular', dose:'0.1 units/kg/hr IV drip' },
+    { type:'med', name:'Potassium Chloride 20mEq', dose:'in each liter of IV fluid' },
+    { type:'lab', name:'BG monitoring q1h, BMP q4h' },
+    { type:'order', name:'Continuous cardiac monitoring + I/O chart' }
+  ]},
+  sepsis: { name: 'Sepsis Bundle (Hour-1)', nameAr: 'بروتوكول الإنتان', orders: [
+    { type:'lab', name:'Blood Culture x2, CBC, Lactate, CRP, Procalcitonin' },
+    { type:'med', name:'Normal Saline 0.9%', dose:'30ml/kg IV bolus within 1hr' },
+    { type:'med', name:'Piperacillin-Tazobactam 4.5g', dose:'IV q8h (start within 1hr)' },
+    { type:'med', name:'Vasopressor (Norepinephrine)', dose:'if MAP<65 after fluids' },
+    { type:'lab', name:'Repeat Lactate if initial >2 mmol/L' },
+    { type:'order', name:'Foley catheter + hourly urine output' }
+  ]},
+  chest_pain: { name: 'ACS Protocol (MONA)', nameAr: 'متلازمة الشريان التاجي', orders: [
+    { type:'lab', name:'Troponin I (stat + q3h x3), CBC, BMP, PT/INR, Lipid Panel' },
+    { type:'med', name:'Aspirin 300mg', dose:'PO stat (chewed)' },
+    { type:'med', name:'Clopidogrel 300mg', dose:'PO loading dose' },
+    { type:'med', name:'Heparin 60 units/kg', dose:'IV bolus then 12 units/kg/hr' },
+    { type:'med', name:'Nitroglycerin 0.4mg', dose:'SL q5min x3 (hold if SBP<90)' },
+    { type:'rad', name:'ECG stat + q15min, Chest X-Ray, Echo' }
+  ]},
+  pneumonia: { name: 'CAP Protocol', nameAr: 'ذات الرئة المكتسبة', orders: [
+    { type:'lab', name:'CBC, CRP, Procalcitonin, Blood Culture, Sputum Culture' },
+    { type:'med', name:'Ceftriaxone 1g', dose:'IV q24h' },
+    { type:'med', name:'Azithromycin 500mg', dose:'IV/PO q24h' },
+    { type:'med', name:'Paracetamol 1g', dose:'IV/PO q6h PRN for fever' },
+    { type:'rad', name:'Chest X-Ray PA + Lateral' },
+    { type:'order', name:'O2 therapy to maintain SpO2 ≥ 94%' }
+  ]}
+};
+
+window.applyCPOESet = function(setId) {
+  const set = CPOE_SETS[setId]; if (!set) return;
+  const preview = document.getElementById('cpoeSetPreview');
+  document.getElementById('cpoeSetName').textContent = `⚡ ${isArabic ? set.nameAr : set.name}`;
+  const icons = { lab:'🔬', med:'💊', rad:'📡', order:'📋' };
+  document.getElementById('cpoeSetItems').innerHTML = set.orders.map(o =>
+    `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--glass-border)">
+      <span style="font-size:16px">${icons[o.type]||'📋'}</span>
+      <span style="flex:1;font-weight:600">${escapeHTML(o.name)}</span>
+      ${o.dose ? `<span style="color:var(--text-dim);font-size:11px">${escapeHTML(o.dose)}</span>` : ''}
+    </div>`
+  ).join('');
+  preview.style.display = 'block';
+  preview.dataset.setId = setId;
+};
+
+window.executeCPOESet = async function() {
+  const pid = document.getElementById('drPatient')?.value;
+  if (!pid) { showToast(tr('Select patient first', 'اختر المريض أولاً'), 'error'); return; }
+  const setId = document.getElementById('cpoeSetPreview')?.dataset?.setId;
+  const set = CPOE_SETS[setId]; if (!set) return;
+  try {
+    await API.post('/api/clinical/cpoe/order-sets/apply', { patient_id: pid, set_name: setId, orders: set.orders });
+    showToast(`✅ ${tr('Order Set applied!', 'تم تطبيق الباقة!')} — ${set.orders.length} ${tr('orders', 'أمر')}`, 'success');
+    document.getElementById('cpoeSetPreview').style.display = 'none';
+  } catch(e) {
+    // Fallback: send individual prescriptions for med orders
+    let count = 0;
+    for (const o of set.orders.filter(x => x.type === 'med')) {
+      try { await API.post('/api/prescriptions', { patient_id: pid, medication_name: o.name, dosage: o.dose, frequency: 'As ordered', duration: 'As needed' }); count++; } catch(ex) {}
+    }
+    showToast(`💊 ${count} ${tr('prescriptions sent', 'وصفات أُرسلت')}`, count ? 'success' : 'error');
+  }
+};
+
+// Drug-Drug Interaction Check on prescription input
+(function setupDDICheck() {
+  document.addEventListener('change', async function(e) {
+    if (e.target?.id !== 'drRxDrug') return;
+    const pid = document.getElementById('drPatient')?.value;
+    const drug = e.target.value;
+    if (!pid || !drug) return;
+    try {
+      const result = await API.post('/api/clinical/drug-interaction-check', { patient_id: pid, new_drug: drug });
+      if (result && result.interactions && result.interactions.length > 0) {
+        const alertEl = document.getElementById('ddiAlert');
+        const msgEl = document.getElementById('ddiMessage');
+        msgEl.innerHTML = result.interactions.map(i =>
+          `<div style="margin-bottom:4px">❌ <strong>${escapeHTML(i.drug1||drug)}</strong> ↔ <strong>${escapeHTML(i.drug2||'')}</strong>: ${escapeHTML(i.severity||'')} — ${escapeHTML(i.description||i.message||'')}</div>`
+        ).join('');
+        alertEl.style.display = 'block';
+      }
+    } catch(ex) { /* DDI endpoint may not exist yet — silent fail */ }
+  });
+})();
 let selectedServices = [];
 window.filterDrServices = () => {
   const q = document.getElementById('drSvcSearch').value.toLowerCase().trim();
@@ -5971,37 +6296,82 @@ window.dischargePatient = async function (id) {
 // ===== ICU =====
 let icuTab = 'patients';
 async function renderICU(el) {
-  const [icuPatients, allAdmissions] = await Promise.all([
-    API.get('/api/icu/patients'),
-    API.get('/api/admissions')
-  ]);
-  const discharged = (allAdmissions || []).filter(a => a.status === 'Discharged' && a.department === 'ICU');
-  const totalICU = (icuPatients || []).length;
-  const onVent = (icuPatients || []).filter(p => p.activity_level === 'Ventilated' || p.dvt_prophylaxis).length;
-  el.innerHTML = `<div class="page-title">🫀 ${tr('ICU / Critical Care', 'العناية المركزة')}</div>
+  let icuPatients = [], allAdmissions = [], alerts = [], flowsheet = {};
+  try { [icuPatients, allAdmissions, alerts] = await Promise.all([
+    API.get('/api/icu/patients'), API.get('/api/admissions'), API.get('/api/clinical/alerts')
+  ]); } catch(e) { icuPatients=[]; allAdmissions=[]; alerts=[]; }
+  const discharged = (allAdmissions||[]).filter(a => a.status==='Discharged' && a.department==='ICU');
+  const totalICU = (icuPatients||[]).length;
+  const onVent = (icuPatients||[]).filter(p => p.activity_level==='Ventilated'||p.dvt_prophylaxis).length;
+  const critAlerts = (alerts||[]).filter(a => a.severity==='critical' && !a.resolved_at);
+  const warnAlerts = (alerts||[]).filter(a => a.severity==='warning' && !a.resolved_at);
+  const occ = totalICU > 0 ? Math.round((totalICU/(totalICU+discharged.length||1))*100) : 0;
+
+  el.innerHTML = `<div class="page-title">🫀 ${tr('ICU Real-time Dashboard', 'لوحة العناية المركزة اللحظية')}</div>
     <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
-      <div class="stat-card"><div class="stat-icon" style="background:#e74c3c22;color:#e74c3c">🫀</div><div class="stat-value" style="color:#e74c3c">${totalICU}</div><div class="stat-label">${tr('Current Patients', 'المرضى الحاليين')}</div></div>
-      <div class="stat-card"><div class="stat-icon" style="background:#3498db22;color:#3498db">🫁</div><div class="stat-value" style="color:#3498db">${onVent}</div><div class="stat-label">${tr('On Ventilator', 'على التنفس')}</div></div>
-      <div class="stat-card"><div class="stat-icon" style="background:#2ecc7122;color:#2ecc71">✅</div><div class="stat-value" style="color:#2ecc71">${discharged.length}</div><div class="stat-label">${tr('Discharged', 'خارجين')}</div></div>
-      <div class="stat-card"><div class="stat-icon" style="background:#9b59b622;color:#9b59b6">📊</div><div class="stat-value" style="color:#9b59b6">${totalICU > 0 ? Math.round((totalICU / (totalICU + discharged.length || 1)) * 100) : 0}%</div><div class="stat-label">${tr('Occupancy', 'الإشغال')}</div></div>
+      <div class="stat-card" style="--stat-color:#ef4444"><div class="stat-icon">🫀</div><div class="stat-label">${tr('Current Patients', 'المرضى الحاليين')}</div><div class="stat-value" style="color:#ef4444">${totalICU}</div></div>
+      <div class="stat-card" style="--stat-color:#3b82f6"><div class="stat-icon">🫁</div><div class="stat-label">${tr('On Ventilator', 'على التنفس')}</div><div class="stat-value" style="color:#3b82f6">${onVent}</div></div>
+      <div class="stat-card" style="--stat-color:#f59e0b"><div class="stat-icon">⚠️</div><div class="stat-label">${tr('Active Alerts', 'تنبيهات نشطة')}</div><div class="stat-value" style="color:#f59e0b">${critAlerts.length + warnAlerts.length}</div></div>
+      <div class="stat-card" style="--stat-color:#22c55e"><div class="stat-icon">📊</div><div class="stat-label">${tr('Occupancy', 'الإشغال')}</div><div class="stat-value" style="color:#22c55e">${occ}%</div></div>
     </div>
-    <div class="tab-bar"><button class="tab-btn ${icuTab === 'patients' ? 'active' : ''}" onclick="icuTab='patients';navigateTo(23)">👥 ${tr('Patients', 'المرضى')}</button>
-      <button class="tab-btn ${icuTab === 'monitor' ? 'active' : ''}" onclick="icuTab='monitor';navigateTo(23)">📊 ${tr('Monitoring', 'المراقبة')}</button>
-      <button class="tab-btn ${icuTab === 'ventilator' ? 'active' : ''}" onclick="icuTab='ventilator';navigateTo(23)">🫁 ${tr('Ventilator', 'التنفس')}</button>
-      <button class="tab-btn ${icuTab === 'scores' ? 'active' : ''}" onclick="icuTab='scores';navigateTo(23)">📋 ${tr('Scores', 'المقاييس')}</button>
-      <button class="tab-btn ${icuTab === 'fluid' ? 'active' : ''}" onclick="icuTab='fluid';navigateTo(23)">💧 ${tr('Fluid Balance', 'توازن السوائل')}</button>
-      <button class="tab-btn ${icuTab === 'discharged' ? 'active' : ''}" onclick="icuTab='discharged';navigateTo(23)">🚪 ${tr('Discharged', 'الخارجين')}</button></div>
-    <div class="card" id="icuContent"></div>`;
+
+    <!-- CRITICAL ALERTS PANEL -->
+    ${critAlerts.length ? `<div class="card" style="border:1px solid rgba(239,68,68,0.3);margin-bottom:16px;animation:alertPulse 2s infinite">
+      <div class="card-title" style="color:#ef4444;border-bottom-color:rgba(239,68,68,0.2)">🚨 ${tr('CRITICAL ALERTS', 'تنبيهات حرجة')} (${critAlerts.length})</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">
+        ${critAlerts.slice(0,6).map(a => `<div style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(239,68,68,0.08);border-radius:12px;border:1px solid rgba(239,68,68,0.15)">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(239,68,68,0.15);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${a.alert_type==='gcs_critical'?'🧠':a.alert_type==='pain_critical'?'😣':'🚨'}</div>
+          <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:13px;color:#ef4444">${escapeHTML(a.alert_type||'').replace(/_/g,' ').toUpperCase()}</div>
+          <div style="font-size:12px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHTML(a.message||'')}</div>
+          <div style="font-size:11px;color:var(--text-dim);opacity:0.6">${a.created_at ? new Date(a.created_at).toLocaleTimeString('ar-SA') : ''}</div></div>
+          <button class="btn btn-sm btn-danger" onclick="resolveAlert(${a.id})" style="flex-shrink:0">✓</button>
+        </div>`).join('')}
+      </div>
+    </div>` : ''}
+
+    ${warnAlerts.length ? `<div class="card" style="border:1px solid rgba(245,158,11,0.3);margin-bottom:16px">
+      <div class="card-title" style="color:#f59e0b;border-bottom-color:rgba(245,158,11,0.2)">⚠️ ${tr('WARNING ALERTS', 'تنبيهات تحذيرية')} (${warnAlerts.length})</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        ${warnAlerts.slice(0,8).map(a => `<div style="padding:8px 14px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.15);border-radius:8px;font-size:12px">
+          <span style="font-weight:700;color:#f59e0b">${escapeHTML(a.alert_type||'').replace(/_/g,' ')}</span> — ${escapeHTML(a.message||'').substring(0,60)}
+        </div>`).join('')}
+      </div>
+    </div>` : ''}
+
+    <div class="tabs" style="margin-bottom:16px">
+      <div class="tab ${icuTab==='patients'?'active':''}" onclick="icuTab='patients';navigateTo(23)">👥 ${tr('Bed Map', 'خريطة الأسرّة')}</div>
+      <div class="tab ${icuTab==='monitor'?'active':''}" onclick="icuTab='monitor';navigateTo(23)">📊 ${tr('Vitals', 'العلامات الحيوية')}</div>
+      <div class="tab ${icuTab==='ventilator'?'active':''}" onclick="icuTab='ventilator';navigateTo(23)">🫁 ${tr('Ventilator', 'التنفس')}</div>
+      <div class="tab ${icuTab==='scores'?'active':''}" onclick="icuTab='scores';navigateTo(23)">📋 ${tr('Scores', 'المقاييس')}</div>
+      <div class="tab ${icuTab==='fluid'?'active':''}" onclick="icuTab='fluid';navigateTo(23)">💧 ${tr('Fluid', 'السوائل')}</div>
+      <div class="tab ${icuTab==='discharged'?'active':''}" onclick="icuTab='discharged';navigateTo(23)">🚪 ${tr('Discharged', 'الخارجين')}</div>
+    </div>
+    <div class="card" id="icuContent"></div>
+    <style>.icu-bed{border-radius:14px;padding:16px;border:1px solid var(--glass-border);background:var(--glass-card);transition:all .3s ease;position:relative;overflow:hidden}.icu-bed:hover{transform:translateY(-3px);box-shadow:var(--glow-md)}.icu-bed.critical{border-color:rgba(239,68,68,.3);animation:bedPulse 2s infinite}.icu-bed .bed-id{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:6px}.icu-bed .bed-patient{font-size:14px;font-weight:700;margin-bottom:4px}.icu-bed .bed-vitals{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.icu-bed .vital-chip{font-size:11px;padding:3px 8px;border-radius:6px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.15);font-weight:600}@keyframes bedPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.15)}50%{box-shadow:0 0 0 6px rgba(239,68,68,.05)}}@keyframes alertPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.1)}50%{box-shadow:0 0 0 4px rgba(239,68,68,.05)}}</style>`;
+
   const c = document.getElementById('icuContent');
   if (icuTab === 'patients') {
-    c.innerHTML = `<h3>👥 ${tr('ICU Patients', 'مرضى العناية المركزة')} (${totalICU})</h3>
-      <input class="form-control" placeholder="${tr('Search...', 'بحث...')}" oninput="filterTable(this,'icuPTable')" style="margin-bottom:12px">
-      ${totalICU ? `<table class="data-table" id="icuPTable"><thead><tr><th>#</th><th>${tr('Patient', 'المريض')}</th><th>${tr('Ward', 'الجناح')}</th><th>${tr('Bed', 'السرير')}</th><th>${tr('Doctor', 'الطبيب')}</th><th>${tr('Diagnosis', 'التشخيص')}</th><th>${tr('Days', 'أيام')}</th><th>${tr('Actions', 'إجراءات')}</th></tr></thead><tbody>${(icuPatients || []).map(p => {
-      const days = Math.floor((new Date() - new Date(p.admission_date)) / 86400000);
-      return `<tr><td>${p.id}</td><td><strong>${p.patient_name}</strong></td><td>${p.ward_name_ar || '-'}</td><td>${tr('Bed', 'سرير')} ${p.bed_number || '-'}</td><td>${p.attending_doctor || '-'}</td><td>${p.diagnosis || '-'}</td>
-        <td><span style="font-weight:700;color:${days > 7 ? '#e74c3c' : '#2ecc71'}">${days}</span></td>
-        <td><button class="btn btn-sm" onclick="showInpatientDischargeModal(${p.id})">🚪 ${tr('Discharge', 'خروج')}</button></td></tr>`;
-    }).join('')}</tbody></table>` : `<div class="empty-state"><div class="empty-icon">🫀</div><p>${tr('No ICU patients', 'لا يوجد مرضى بالعناية')}</p></div>`}`;
+    if (totalICU) {
+      c.innerHTML = `<div class="card-title">🛏️ ${tr('ICU Bed Map', 'خريطة أسرّة العناية')} (${totalICU})</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px">
+        ${(icuPatients||[]).map(p => {
+          const days = Math.floor((new Date()-new Date(p.admission_date))/86400000);
+          const isCrit = days > 7;
+          return `<div class="icu-bed ${isCrit?'critical':''}">
+            <div class="bed-id">${tr('Bed','سرير')} ${p.bed_number||'?'} — ${p.ward_name_ar||'ICU'}</div>
+            <div class="bed-patient">${escapeHTML(p.patient_name)}</div>
+            <div style="font-size:12px;color:var(--text-dim)">${escapeHTML(p.diagnosis||'-')}</div>
+            <div style="font-size:11px;margin-top:4px">${tr('Doctor','طبيب')}: ${escapeHTML(p.attending_doctor||'-')}</div>
+            <div class="bed-vitals">
+              <span class="vital-chip" style="${isCrit?'background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.2);color:#ef4444':''}">📅 ${days} ${tr('days','يوم')}</span>
+              ${p.activity_level==='Ventilated'?'<span class="vital-chip" style="background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.2);color:#3b82f6">🫁 Vent</span>':''}
+            </div>
+            <div style="margin-top:10px"><button class="btn btn-sm" onclick="showInpatientDischargeModal(${p.id})">🚪 ${tr('Discharge','خروج')}</button></div>
+          </div>`;
+        }).join('')}</div>`;
+    } else {
+      c.innerHTML = `<div class="empty-state"><div class="empty-icon">🫀</div><p>${tr('No ICU patients','لا يوجد مرضى بالعناية')}</p></div>`;
+    }
   } else if (icuTab === 'monitor') {
     c.innerHTML = `<h3>📊 ${tr('Record Vitals', 'تسجيل العلامات الحيوية')}</h3>
       <div class="form-grid">
@@ -6095,6 +6465,9 @@ window.saveFluidBalance = async function () {
     await API.post('/api/icu/fluid-balance', { admission_id: s.value, patient_id: s.options[s.selectedIndex].dataset.pid, shift: document.getElementById('fluidShift').value, iv_fluids: document.getElementById('fluidIV').value, oral_intake: document.getElementById('fluidOral').value, blood_products: document.getElementById('fluidBlood').value, medications_iv: document.getElementById('fluidMeds').value, urine: document.getElementById('fluidUrine').value, drains: document.getElementById('fluidDrains').value, ngt_output: document.getElementById('fluidNGT').value, vomit: document.getElementById('fluidVomit').value, recorded_by: currentUser?.display_name });
     showToast(tr('Saved!', 'تم الحفظ!'));
   } catch (e) { showToast(tr('Error', 'خطأ'), 'error'); }
+};
+window.resolveAlert = async function (id) {
+  try { await API.put('/api/clinical/alerts/' + id + '/resolve', { resolved_by: currentUser?.display_name }); showToast(tr('Alert resolved', 'تم حل التنبيه')); navigateTo(23); } catch(e) { showToast(tr('Error', 'خطأ'), 'error'); }
 };
 // ===== CSSD =====
 async function renderCSSD(el) {
@@ -6729,23 +7102,45 @@ async function renderZATCA(el) {
     API.get('/api/zatca/invoices').catch(() => []),
     API.get('/api/zatca/settings').catch(() => ({}))
   ]);
-
   const submitted = invoices.filter(i => i.zatca_status === 'submitted').length;
   const pending = invoices.filter(i => !i.zatca_status || i.zatca_status === 'pending' || i.zatca_status === 'ready').length;
   const hasSettings = !!settings.tax_number;
-  const phaseTxt = settings.phase === '2' ? tr('Phase 2 (Digital Signature)', 'المرحلة 2 (توقيع رقمي)') : tr('Phase 1 (Simple QR)', 'المرحلة 1 (QR بسيط)');
+  const phaseTxt = settings.phase === '2' ? tr('Phase 2', 'المرحلة 2') : tr('Phase 1', 'المرحلة 1');
+  let nphiesData = {}, wasfatyData = [], yaqeenData = {};
+  try { nphiesData = await API.get('/api/nphies/config').catch(()=>({})); } catch(e){}
+  try { wasfatyData = await API.get('/api/wasfaty/prescriptions').catch(()=>[]); } catch(e){}
+  try { yaqeenData = await API.get('/api/yaqeen/stats').catch(()=>({})); } catch(e){}
+  const rejected = invoices.filter(i => i.zatca_status === 'rejected').length;
 
   content.innerHTML = `
-    <h2>🧾 ${tr('ZATCA E-Invoice', 'الفاتورة الإلكترونية - زاتكا')}</h2>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px">
-      <div class="card" style="padding:16px;text-align:center;background:linear-gradient(135deg,#e8f5e9,#c8e6c9)"><h3 style="margin:0;color:#2e7d32">${submitted}</h3><p style="margin:4px 0 0;font-size:13px">${tr('Submitted', 'مرسلة')}</p></div>
-      <div class="card" style="padding:16px;text-align:center;background:linear-gradient(135deg,#fff3e0,#ffe0b2)"><h3 style="margin:0;color:#e65100">${pending}</h3><p style="margin:4px 0 0;font-size:13px">${tr('Pending', 'بانتظار الإرسال')}</p></div>
-      <div class="card" style="padding:16px;text-align:center;background:linear-gradient(135deg,#e3f2fd,#bbdefb)"><h3 style="margin:0;color:#1565c0">${invoices.length}</h3><p style="margin:4px 0 0;font-size:13px">${tr('Total Invoices', 'إجمالي الفواتير')}</p></div>
-      <div class="card" style="padding:16px;text-align:center;background:${hasSettings ? 'linear-gradient(135deg,#e8f5e9,#a5d6a7)' : 'linear-gradient(135deg,#fce4ec,#ef9a9a)'}"><h3 style="margin:0;color:${hasSettings ? '#2e7d32' : '#c62828'}">${hasSettings ? '✅' : '❌'}</h3><p style="margin:4px 0 0;font-size:13px">${hasSettings ? phaseTxt : tr('Not Configured', 'غير مُعدّ')}</p></div>
+    <div class="page-title">🇸🇦 ${tr('Saudi Compliance Hub', 'مركز الامتثال السعودي')}</div>
+
+    <!-- Integration Status Bar -->
+    <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">
+      <div class="stat-card" style="--stat-color:#22c55e"><div class="stat-icon">🧾</div><div class="stat-label">ZATCA</div>
+        <div class="stat-value" style="color:#22c55e;font-size:20px">${hasSettings ? '✅ '+phaseTxt : '❌ '+tr('Not Set','غير مُعدّ')}</div></div>
+      <div class="stat-card" style="--stat-color:#3b82f6"><div class="stat-icon">🏥</div><div class="stat-label">NPHIES</div>
+        <div class="stat-value" style="color:#3b82f6;font-size:20px">${nphiesData.provider_id ? '✅ '+tr('Connected','متصل') : '⏳ '+tr('Pending','معلق')}</div></div>
+      <div class="stat-card" style="--stat-color:#8b5cf6"><div class="stat-icon">💊</div><div class="stat-label">Wasfaty</div>
+        <div class="stat-value" style="color:#8b5cf6;font-size:20px">${wasfatyData.length || 0} ${tr('Prescriptions','وصفات')}</div></div>
+      <div class="stat-card" style="--stat-color:#f59e0b"><div class="stat-icon">🪪</div><div class="stat-label">Yaqeen</div>
+        <div class="stat-value" style="color:#f59e0b;font-size:20px">${yaqeenData.verified_count || 0} ${tr('Verified','تم التحقق')}</div></div>
     </div>
-    <div style="display:flex;gap:8px;margin-bottom:16px">
-      <button class="btn ${zatcaTab === 'invoices' ? 'btn-primary' : ''}" onclick="zatcaTab='invoices';navigateTo(currentPage)" style="flex:1">🧾 ${tr('Invoices', 'الفواتير')}</button>
-      <button class="btn ${zatcaTab === 'settings' ? 'btn-primary' : ''}" onclick="zatcaTab='settings';navigateTo(currentPage)" style="flex:1">⚙️ ${tr('ZATCA Settings', 'إعدادات زاتكا')}</button>
+
+    <!-- ZATCA Summary -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px">
+      <div class="card" style="text-align:center;padding:16px"><div style="font-size:28px;font-weight:800;color:#22c55e">${submitted}</div><div style="font-size:12px;color:var(--text-dim)">${tr('Submitted','مرسلة')}</div></div>
+      <div class="card" style="text-align:center;padding:16px"><div style="font-size:28px;font-weight:800;color:#f59e0b">${pending}</div><div style="font-size:12px;color:var(--text-dim)">${tr('Pending','معلقة')}</div></div>
+      <div class="card" style="text-align:center;padding:16px"><div style="font-size:28px;font-weight:800;color:#ef4444">${rejected}</div><div style="font-size:12px;color:var(--text-dim)">${tr('Rejected','مرفوضة')}</div></div>
+      <div class="card" style="text-align:center;padding:16px"><div style="font-size:28px;font-weight:800;color:#3b82f6">${invoices.length}</div><div style="font-size:12px;color:var(--text-dim)">${tr('Total','الإجمالي')}</div></div>
+    </div>
+
+    <div class="tabs" style="margin-bottom:16px">
+      <div class="tab ${zatcaTab==='invoices'?'active':''}" onclick="zatcaTab='invoices';navigateTo(currentPage)">🧾 ${tr('E-Invoices','الفوترة الإلكترونية')}</div>
+      <div class="tab ${zatcaTab==='settings'?'active':''}" onclick="zatcaTab='settings';navigateTo(currentPage)">⚙️ ${tr('ZATCA Settings','إعدادات زاتكا')}</div>
+      <div class="tab ${zatcaTab==='nphies'?'active':''}" onclick="zatcaTab='nphies';navigateTo(currentPage)">🏥 NPHIES</div>
+      <div class="tab ${zatcaTab==='wasfaty'?'active':''}" onclick="zatcaTab='wasfaty';navigateTo(currentPage)">💊 ${tr('Wasfaty','وصفتي')}</div>
+      <div class="tab ${zatcaTab==='yaqeen'?'active':''}" onclick="zatcaTab='yaqeen';navigateTo(currentPage)">🪪 ${tr('Yaqeen','يقين')}</div>
     </div>
     <div id="zatcaContent"></div>`;
 
@@ -6786,6 +7181,44 @@ async function renderZATCA(el) {
         <div class="form-group" style="grid-column:1/-1"><label>${tr('Certificate (Base64) - Phase 2 only', 'الشهادة (Base64) - المرحلة 2 فقط')}</label><textarea class="form-input" id="zCert" rows="3" placeholder="${tr('Paste X.509 certificate in Base64...', 'الصق الشهادة...')}">${settings.certificate_base64 || ''}</textarea></div>
       </div>
       <button class="btn btn-primary w-full" onclick="saveZatcaSettings()" style="height:48px;margin-top:12px;font-size:16px">💾 ${tr('Save ZATCA Settings', 'حفظ إعدادات زاتكا')}</button>
+    </div>`;
+  } else if (zatcaTab === 'nphies') {
+    zc.innerHTML = `<div class="card" style="padding:24px">
+      <h3 style="margin:0 0 16px">🏥 ${tr('NPHIES — Insurance Verification','نفيس — التحقق التأميني')}</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div style="padding:16px;border-radius:12px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.15);text-align:center">
+          <div style="font-size:24px;font-weight:800;color:#22c55e">✅</div><div style="font-size:12px;color:var(--text-dim);margin-top:4px">${tr('Eligible','مؤهل')}</div>
+        </div>
+        <div style="padding:16px;border-radius:12px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15);text-align:center">
+          <div style="font-size:24px;font-weight:800;color:#ef4444">❌</div><div style="font-size:12px;color:var(--text-dim);margin-top:4px">${tr('Rejected','مرفوض')}</div>
+        </div>
+      </div>
+      <div class="form-group mb-12"><label>${tr('Patient ID','رقم المريض')}</label><input class="form-input" id="nphPatient" placeholder="${tr('Enter patient ID or file number','أدخل رقم المريض أو الملف')}"></div>
+      <div class="form-group mb-12"><label>${tr('Insurance Provider','شركة التأمين')}</label>
+        <select class="form-input" id="nphInsurer"><option>Bupa Arabia</option><option>Tawuniya</option><option>MedGulf</option><option>Al Rajhi Takaful</option><option>AXA Cooperative</option><option>${tr('Other','أخرى')}</option></select>
+      </div>
+      <div class="form-group mb-12"><label>${tr('Member ID','رقم العضوية')}</label><input class="form-input" id="nphMemberId"></div>
+      <button class="btn btn-primary w-full" onclick="checkNPHIES()" style="height:44px">🔍 ${tr('Check Eligibility','تحقق من الأهلية')}</button>
+      <div id="nphResult" style="margin-top:16px"></div>
+    </div>`;
+  } else if (zatcaTab === 'wasfaty') {
+    zc.innerHTML = `<div class="card" style="padding:24px">
+      <h3 style="margin:0 0 16px">💊 ${tr('Wasfaty — E-Prescriptions','وصفتي — الوصفات الإلكترونية')}</h3>
+      <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px">${tr('Track prescriptions sent to the national Wasfaty gateway','تتبع الوصفات المرسلة لبوابة وصفتي الوطنية')}</p>
+      ${(wasfatyData||[]).length ? `<table class="data-table"><thead><tr><th>#</th><th>${tr('Patient','المريض')}</th><th>${tr('Medication','الدواء')}</th><th>${tr('Status','الحالة')}</th><th>${tr('Wasfaty ID','معرف وصفتي')}</th><th>${tr('Date','التاريخ')}</th></tr></thead><tbody>
+      ${(wasfatyData||[]).map(w => `<tr><td>${w.id||''}</td><td>${escapeHTML(w.patient_name||'')}</td><td>${escapeHTML(w.medication_name||'')}</td>
+        <td>${w.status==='dispensed'?badge(tr('Dispensed','تم الصرف'),'success'):w.status==='sent'?badge(tr('Sent','مرسلة'),'info'):badge(tr('Pending','معلقة'),'warning')}</td>
+        <td style="font-family:monospace;font-size:11px">${w.wasfaty_id||'-'}</td><td>${w.created_at?new Date(w.created_at).toLocaleDateString('ar-SA'):'-'}</td></tr>`).join('')}
+      </tbody></table>` : `<div class="empty-state"><div class="empty-icon">💊</div><p>${tr('No Wasfaty prescriptions yet','لا توجد وصفات في وصفتي بعد')}</p></div>`}
+    </div>`;
+  } else if (zatcaTab === 'yaqeen') {
+    zc.innerHTML = `<div class="card" style="padding:24px">
+      <h3 style="margin:0 0 16px">🪪 ${tr('Yaqeen — Identity Verification','يقين — التحقق من الهوية')}</h3>
+      <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px">${tr('Verify patient identity through Yaqeen national platform','تحقق من هوية المريض عبر منصة يقين الوطنية')}</p>
+      <div class="form-group mb-12"><label>${tr('National ID / Iqama','رقم الهوية / الإقامة')}</label><input class="form-input" id="yqNatId" maxlength="10" placeholder="1XXXXXXXXX"></div>
+      <div class="form-group mb-12"><label>${tr('Date of Birth (Hijri)','تاريخ الميلاد (هجري)')}</label><input class="form-input" id="yqDob" placeholder="1410/01/15"></div>
+      <button class="btn btn-primary w-full" onclick="verifyYaqeen()" style="height:44px">🔍 ${tr('Verify Identity','تحقق من الهوية')}</button>
+      <div id="yqResult" style="margin-top:16px"></div>
     </div>`;
   } else {
     // Invoices tab
@@ -6954,8 +7387,31 @@ async function renderZATCA(el) {
       win.document.close();
     } catch (e) { showToast(tr('Error printing', 'خطأ في الطباعة'), 'error'); }
   };
-}
 
+  // NPHIES & Yaqeen window functions
+  window.checkNPHIES = async function() {
+    const pid = document.getElementById('nphPatient')?.value;
+    if (!pid) { showToast(tr('Enter patient ID','أدخل رقم المريض'),'error'); return; }
+    try {
+      const r = await API.post('/api/nphies/eligibility/check', { patient_id: pid, insurer: document.getElementById('nphInsurer')?.value, member_id: document.getElementById('nphMemberId')?.value });
+      document.getElementById('nphResult').innerHTML = `<div style="padding:16px;border-radius:12px;background:${r.eligible?'rgba(34,197,94,0.08)':'rgba(239,68,68,0.08)'};border:1px solid ${r.eligible?'rgba(34,197,94,0.2)':'rgba(239,68,68,0.2)'};margin-top:12px">
+        <div style="font-weight:700;color:${r.eligible?'#22c55e':'#ef4444'};font-size:16px">${r.eligible?'✅ '+tr('ELIGIBLE','مؤهل'):'❌ '+tr('NOT ELIGIBLE','غير مؤهل')}</div>
+        <div style="font-size:12px;margin-top:6px;color:var(--text-dim)">${escapeHTML(r.message||r.details||'')}</div></div>`;
+    } catch(e) { document.getElementById('nphResult').innerHTML = `<div style="padding:12px;background:rgba(245,158,11,0.1);border-radius:8px;color:#f59e0b;font-size:13px">⏳ ${tr('NPHIES service unavailable — check configuration','خدمة نفيس غير متاحة — تحقق من الإعدادات')}</div>`; }
+  };
+  window.verifyYaqeen = async function() {
+    const natId = document.getElementById('yqNatId')?.value;
+    if (!natId) { showToast(tr('Enter National ID','أدخل رقم الهوية'),'error'); return; }
+    try {
+      const r = await API.post('/api/yaqeen/verify', { national_id: natId, date_of_birth: document.getElementById('yqDob')?.value });
+      document.getElementById('yqResult').innerHTML = `<div style="padding:16px;border-radius:12px;background:${r.verified?'rgba(34,197,94,0.08)':'rgba(239,68,68,0.08)'};border:1px solid ${r.verified?'rgba(34,197,94,0.2)':'rgba(239,68,68,0.2)'}">
+        <div style="font-weight:700;color:${r.verified?'#22c55e':'#ef4444'};font-size:16px">${r.verified?'✅ '+tr('VERIFIED','تم التحقق'):'❌ '+tr('NOT VERIFIED','لم يتم التحقق')}</div>
+        ${r.full_name?`<div style="margin-top:8px;font-size:13px"><strong>${tr('Name','الاسم')}:</strong> ${escapeHTML(r.full_name)}</div>`:''}
+        ${r.nationality?`<div style="font-size:13px"><strong>${tr('Nationality','الجنسية')}:</strong> ${escapeHTML(r.nationality)}</div>`:''}
+      </div>`;
+    } catch(e) { document.getElementById('yqResult').innerHTML = `<div style="padding:12px;background:rgba(245,158,11,0.1);border-radius:8px;color:#f59e0b;font-size:13px">⏳ ${tr('Yaqeen service unavailable','خدمة يقين غير متاحة')}</div>`; }
+  };
+}
 
 // ===== TELEMEDICINE =====
 let teleTab = 'sessions';
@@ -7731,3 +8187,30 @@ async function renderConsultation(el) {
   };
 }
 
+// ===== APP SERVER PORTAL =====
+async function renderAppServerPortal(el) {
+  el.innerHTML = '<div class="page-title">🖥️ ' + tr('APP SERVER Portal', 'بوابة التطبيقات') + '</div>' +
+    '<div style="display:flex;gap:12px;margin-bottom:16px">' +
+      '<a href="/portal/" target="_blank" class="btn btn-primary">🔗 ' + tr('Open in New Tab', 'فتح في تبويب جديد') + '</a>' +
+    '</div>' +
+    '<div class="card" style="padding:0;overflow:hidden;border-radius:12px">' +
+      '<iframe src="/portal/" style="width:100%;height:calc(100vh - 200px);border:none;border-radius:12px"></iframe>' +
+    '</div>';
+}
+
+// ===== ADAPTIVE UI INTEGRATION =====
+window.launchAdaptiveUI = async () => {
+  let drSpecialty = 'CARDIO_INT';
+  try {
+    const currentUser = await API.get('/api/auth/me');
+    if (currentUser && currentUser.user && currentUser.user.speciality) {
+      drSpecialty = currentUser.user.speciality;
+    }
+  } catch(e) {
+    console.warn("Could not get user specialty for Adaptive Station, defaulting to CARDIO_INT", e);
+  }
+  
+  const lang = localStorage.getItem('namaLang') || 'en';
+  const iframeHtml = `<iframe src="/adaptive_doctor_station.html?specialty=${drSpecialty}&lang=${lang}" style="width:100%; height:85vh; border:none; border-radius:12px;"></iframe>`;
+  document.getElementById('pageContent').innerHTML = iframeHtml;
+};

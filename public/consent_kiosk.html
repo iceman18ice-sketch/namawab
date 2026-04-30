@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Consent Kiosk | Nama Medical</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --primary: #3b82f6;
+            --border: #e2e8f0;
+        }
+        [data-theme="dark"] {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --text: #f1f5f9;
+            --border: #334155;
+        }
+        body {
+            font-family: 'Inter', 'Tajawal', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0; padding: 20px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: var(--surface);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+        .header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .content {
+            display: flex;
+            height: 50vh;
+            border-bottom: 1px solid var(--border);
+        }
+        .pane {
+            flex: 1; padding: 20px; overflow-y: auto;
+        }
+        .pane-ar { text-align: right; border-left: 1px solid var(--border); direction: rtl; }
+        .pane-en { text-align: left; }
+        
+        .signature-area {
+            padding: 20px;
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+        }
+        canvas {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            background: #fff; /* Always white for contrast */
+            cursor: crosshair;
+        }
+        .actions {
+            display: flex; gap: 10px; padding-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-secondary { background: var(--border); color: var(--text); }
+        .loading { text-align: center; padding: 50px; font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+
+    <h2 style="margin-bottom: 20px;">Digital Consent Kiosk</h2>
+    
+    <div id="setup-form" style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <input type="number" id="patientId" placeholder="Patient ID (e.g. 1)" value="1" style="padding: 10px;">
+        <select id="specialtySelect" style="padding: 10px;">
+            <option value="CARDIO_INT">Interventional Cardiology</option>
+            <option value="NEUROSURGERY">Neurosurgery</option>
+            <option value="IVF">IVF</option>
+            <option value="OPHTHALMOLOGY">Ophthalmology</option>
+            <option value="UROLOGY">Urology</option>
+            <option value="PEDS_ENT">Pediatric ENT</option>
+        </select>
+        <button class="btn-primary" onclick="loadConsents()">Fetch Consents</button>
+    </div>
+
+    <div class="container" id="kiosk-container" style="display: none;">
+        <div class="header">
+            <div>
+                <h3 id="doc-title-en" style="margin: 0; color: var(--primary);">Title EN</h3>
+            </div>
+            <div style="text-align: right;">
+                <h3 id="doc-title-ar" style="margin: 0; color: var(--primary); font-family: 'Tajawal';">العنوان</h3>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="pane pane-en">
+                <p id="doc-content-en" style="white-space: pre-wrap; line-height: 1.6;">Loading...</p>
+            </div>
+            <div class="pane pane-ar">
+                <p id="doc-content-ar" style="white-space: pre-wrap; line-height: 1.6; font-family: 'Tajawal';">جاري التحميل...</p>
+            </div>
+        </div>
+
+        <div class="signature-area">
+            <h4>Please sign inside the box below / الرجاء التوقيع داخل المربع</h4>
+            <canvas id="sigCanvas" width="600" height="200"></canvas>
+            <div class="actions">
+                <button class="btn-secondary" onclick="clearCanvas()">Clear / مسح</button>
+                <button class="btn-primary" onclick="submitConsent()">Agree & Sign / موافق وأوقّع</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTemplateId = null;
+        let isDrawing = false;
+        const canvas = document.getElementById('sigCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Touch/Mouse events for drawing
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: clientX - rect.left, y: clientY - rect.top };
+        }
+
+        function startPosition(e) { isDrawing = true; draw(e); }
+        function endPosition() { isDrawing = false; ctx.beginPath(); }
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            const pos = getPos(e);
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#000';
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        }
+
+        canvas.addEventListener('mousedown', startPosition);
+        canvas.addEventListener('mouseup', endPosition);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('touchstart', startPosition, {passive: false});
+        canvas.addEventListener('touchend', endPosition);
+        canvas.addEventListener('touchmove', draw, {passive: false});
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        async function loadConsents() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const pid = urlParams.get('patient') || document.getElementById('patientId').value;
+            const spec = urlParams.get('specialty') || document.getElementById('specialtySelect').value;
+            
+            // Note: Since we don't have auth token here in standard test, we use generic fetch
+            const res = await fetch(`/api/specialty-consents/patient/${pid}?specialty=${spec}`);
+            const data = await res.json();
+            
+            if (data && data.length > 0) {
+                const doc = data[0]; // Just load the first one for demo
+                currentTemplateId = doc.template_id;
+                document.getElementById('doc-title-en').innerText = doc.title_en;
+                document.getElementById('doc-title-ar').innerText = doc.title_ar;
+                document.getElementById('doc-content-en').innerText = doc.content_en;
+                document.getElementById('doc-content-ar').innerText = doc.content_ar;
+                document.getElementById('kiosk-container').style.display = 'flex';
+                clearCanvas();
+                
+                if(doc.is_signed) {
+                    alert('This consent is already signed by the patient.');
+                }
+            } else {
+                alert('No consents found for this specialty.');
+            }
+        }
+
+        async function submitConsent() {
+            const pid = document.getElementById('patientId').value;
+            const imgData = canvas.toDataURL('image/png');
+            
+            // Check if blank
+            const blank = document.createElement('canvas');
+            blank.width = canvas.width; blank.height = canvas.height;
+            if(imgData === blank.toDataURL()) {
+                alert("Please sign before submitting."); return;
+            }
+
+            const res = await fetch('/api/specialty-consents/sign', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    patient_id: pid,
+                    template_id: currentTemplateId,
+                    signature_image: imgData
+                })
+            });
+
+            if(res.ok) {
+                alert('Consent signed successfully! ✅');
+                document.getElementById('kiosk-container').style.display = 'none';
+            } else {
+                alert('Failed to save signature.');
+            }
+        }
+        window.onload = () => {
+            const params = new URLSearchParams(window.location.search);
+            if(params.get('specialty')) {
+                document.getElementById('setup-form').style.display = 'none';
+                loadConsents();
+            }
+        };
+    </script>
+</body>
+</html>

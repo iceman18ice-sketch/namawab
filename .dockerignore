@@ -1,0 +1,11 @@
+node_modules
+npm-debug.log
+.env
+.git
+.gitignore
+*.md
+tests
+__tests__
+coverage
+.nyc_output
+refactor_tool.js

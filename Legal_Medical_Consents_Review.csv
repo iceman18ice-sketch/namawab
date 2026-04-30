@@ -1,0 +1,66 @@
+﻿Specialty,Category,Mandatory,Title (EN),Title (AR),Content (EN),Content (AR)
+"UROLOGY","General","Yes","Informed Consent for Urological Procedure / Cystoscopy","إقرار مستنير لإجراء تنظير المثانة / جراحة المسالك البولية","I consent to the urological procedure/cystoscopy.
+Risks discussed include:
+1. Urinary tract infection (UTI).
+2. Bleeding or hematuria.
+3. Stricture or scarring of the urethra.
+4. Temporary inability to urinate requiring a catheter.","أوافق على إجراء تنظير المثانة / جراحة المسالك البولية.
+تمت مناقشة المخاطر التالية:
+1. عدوى المسالك البولية.
+2. النزيف أو البيلة الدموية.
+3. تضيق أو ندوب في الإحليل.
+4. عدم القدرة المؤقتة على التبول مما يتطلب قسطرة."
+"CARDIO_INT","High-Risk","Yes","Informed Consent for Coronary Angiography and Angioplasty","إقرار مستنير لإجراء قسطرة القلب التشخيصية والعلاجية","I hereby authorize the medical team to perform a coronary angiography and possible angioplasty.
+Risks discussed include:
+1. Allergic reaction to contrast media (dye).
+2. Bleeding or hematoma at the puncture site.
+3. Damage to the blood vessel requiring surgery.
+4. Acute myocardial infarction, stroke, or death.
+I confirm I have understood the procedure, alternatives, and risks.","أفوض الفريق الطبي بإجراء قسطرة القلب التشخيصية و/أو العلاجية.
+تمت مناقشة المخاطر التالية:
+1. رد فعل تحسسي للمادة الملونة (الصبغة).
+2. نزيف أو تجمع دموي في مكان إدخال القسطرة.
+3. إصابة الوعاء الدموي مما قد يستدعي تدخلاً جراحياً.
+4. احتشاء عضلة القلب، سكتة دماغية، أو الوفاة.
+أؤكد أنني فهمت الإجراء والبدائل والمخاطر المترتبة."
+"NEUROSURGERY","High-Risk","Yes","Informed Consent for Neurosurgical Procedure","إقرار مستنير لإجراء عملية جراحة أعصاب","I authorize the surgical team to perform a neurosurgical procedure.
+Risks discussed include:
+1. Infection (Meningitis, Brain Abscess).
+2. Bleeding (Intracranial hemorrhage).
+3. Neurological deficits (Paralysis, weakness, numbness, speech or vision loss).
+4. Cognitive loss or changes in personality.
+5. Seizures or coma.
+6. Death.","أفوض الفريق الجراحي بإجراء جراحة الأعصاب.
+تمت مناقشة المخاطر التالية:
+1. العدوى (التهاب السحايا، خراج الدماغ).
+2. النزيف (النزيف داخل الجمجمة).
+3. العجز العصبي (الشلل، الضعف، الخدر، فقدان النطق أو البصر).
+4. فقدان القدرات الإدراكية أو تغير في الشخصية.
+5. النوبات أو الغيبوبة.
+6. الوفاة."
+"IVF","Specialized","Yes","Informed Consent for In Vitro Fertilization (IVF)","إقرار مستنير لإجراء التلقيح الصناعي / أطفال الأنابيب","I consent to undergo IVF treatment.
+Risks discussed include:
+1. Ovarian Hyperstimulation Syndrome (OHSS).
+2. Multiple pregnancies.
+3. Ectopic pregnancy.
+4. Surgical risks during egg retrieval.
+I also agree to policies regarding the disposition of unused embryos.","أوافق على الخضوع لعلاج التلقيح الصناعي.
+تمت مناقشة المخاطر التالية:
+1. متلازمة فرط تنشيط المبيض (OHSS).
+2. الحمل المتعدد.
+3. الحمل خارج الرحم.
+4. المخاطر الجراحية أثناء سحب البويضات.
+كما أتفهم وأوافق على السياسات المتعلقة بالتخلص من الأجنة غير المستخدمة."
+"OPHTHALMOLOGY","Specialized","Yes","Informed Consent for Cataract Surgery","إقرار مستنير لجراحة إزالة المياه البيضاء (الساد)","I authorize the ophthalmologist to perform cataract surgery.
+Risks discussed include:
+1. Infection inside the eye.
+2. Retinal detachment.
+3. Glaucoma.
+4. Loss of vision or blindness (Rare).
+5. Need for additional surgeries.","أفوض طبيب العيون بإجراء جراحة إزالة المياه البيضاء.
+تمت مناقشة المخاطر التالية:
+1. العدوى داخل العين.
+2. انفصال الشبكية.
+3. الجلوكوما.
+4. فقدان البصر أو العمى.
+5. الحاجة إلى جراحات إضافية."

@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
+const PgSession = require('connect-pg-simple')(session);
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
@@ -34,29 +35,100 @@ app.use(compression());
 const PORT = process.env.PORT || 3000;
 
 // Security Middleware
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false
+}));
 
 // Rate limiting for login endpoint
 const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, message: { error: 'Too many login attempts, please try again after 15 minutes' } });
+
+// Global API rate limiter (200 requests per minute per IP)
+const apiLimiter = rateLimit({ windowMs: 60 * 1000, max: 200, message: { error: 'Too many requests, please slow down' }, standardHeaders: true, legacyHeaders: false });
+app.use('/api/', apiLimiter);
+
+// Input sanitization middleware - strips dangerous HTML/script tags
+function sanitizeInput(obj) {
+    if (typeof obj === 'string') return obj.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '').replace(/on\w+\s*=\s*["'][^"']*["']/gi, '');
+    if (Array.isArray(obj)) return obj.map(sanitizeInput);
+    if (obj && typeof obj === 'object') { for (const k of Object.keys(obj)) obj[k] = sanitizeInput(obj[k]); }
+    return obj;
+}
+app.use((req, res, next) => { if (req.body && typeof req.body === 'object') req.body = sanitizeInput(req.body); next(); });
 
 // Middleware
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
+    store: new PgSession({
+        pool: pool,
+        tableName: 'user_sessions',
+        createTableIfMissing: true,
+        pruneSessionInterval: 60 * 15 // Prune expired sessions every 15 min
+    }),
     secret: process.env.SESSION_SECRET || 'nama-medical-erp-secret-x7k9m2p4q8w1',
     resave: true,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: {
         maxAge: 8 * 60 * 60 * 1000,
-        httpOnly: false,
-        secure: false
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production' && !['localhost', '127.0.0.1'].includes(process.env.DB_HOST || 'localhost'),
+        sameSite: 'lax'
     },
     rolling: true
 }));
 
+// Cache-bust local JS/CSS in HTML responses by appending ?v=BUILD_VERSION
+const BUILD_VERSION = Date.now().toString();
+function serveHTMLWithVersion(htmlFile) {
+    return (req, res) => {
+        const filePath = path.join(__dirname, 'public', htmlFile);
+        fs.readFile(filePath, 'utf8', (err, html) => {
+            if (err) return res.status(404).send('Not found');
+            const out = html
+                .replace(/(<script\s+src=")(\/js\/[^"?]+\.js)"/g, `$1$2?v=${BUILD_VERSION}"`)
+                .replace(/(<link[^>]+href=")(\/css\/[^"?]+\.css)"/g, `$1$2?v=${BUILD_VERSION}"`);
+            res.set('Cache-Control', 'no-cache');
+            res.type('html').send(out);
+        });
+    };
+}
+app.get(['/', '/index.html'], serveHTMLWithVersion('index.html'));
+app.get('/admin.html', serveHTMLWithVersion('admin.html'));
+app.get('/login.html', serveHTMLWithVersion('login.html'));
+
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
+
+// AppServerPortal - بوابة خادم التطبيقات
+app.use('/portal', express.static('d:\\NamaMedical\\AppServerPortal'));
+
+// Health check endpoint
+app.get('/api/health', async (req, res) => {
+    try {
+        const dbCheck = await pool.query('SELECT NOW()');
+        const sessionCheck = await pool.query('SELECT COUNT(*) as active FROM user_sessions WHERE expire > NOW()');
+        res.json({
+            status: 'healthy',
+            uptime: Math.floor(process.uptime()),
+            database: 'connected',
+            activeSessions: parseInt(sessionCheck.rows[0].active),
+            timestamp: dbCheck.rows[0].now,
+            memoryUsage: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + ' MB'
+        });
+    } catch (e) { res.status(503).json({ status: 'unhealthy', error: e.message }); }
+});
+
+// API Request Logger
+app.use('/api/', (req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        if (duration > 2000) console.warn(`⚠️ Slow API: ${req.method} ${req.originalUrl} - ${duration}ms [${res.statusCode}]`);
+    });
+    next();
+});
 
 function requireAuth(req, res, next) {
     if (req.session && req.session.user) return next();
@@ -2900,10 +2972,24 @@ app.get('/api/print/lab-report/:id', requireAuth, async (req, res) => {
 // [MOVED] catch-all to end of routes
 
 // ===== INIT & START =====
+// Auto-migrate any remaining plain-text passwords to bcrypt
+async function migratePasswords() {
+    const { rows } = await pool.query("SELECT id, password_hash FROM system_users WHERE password_hash != '' AND password_hash NOT LIKE '$2%'");
+    if (rows.length > 0) {
+        console.log(`  🔐 Migrating ${rows.length} plain-text password(s) to bcrypt...`);
+        for (const u of rows) {
+            const hash = await bcrypt.hash(u.password_hash, 10);
+            await pool.query('UPDATE system_users SET password_hash=$1 WHERE id=$2', [hash, u.id]);
+        }
+        console.log('  ✅ Password migration complete');
+    }
+}
+
 async function startServer() {
     try {
         console.log('\n  🐘 Connecting to PostgreSQL...');
         await initDatabase();
+        await migratePasswords();
         await insertSampleData();
         await populateLabCatalog();
         await populateRadiologyCatalog();
@@ -2914,7 +3000,8 @@ async function startServer() {
         app.listen(PORT, () => {
             console.log(`\n  ✅ Medical Center Web is running!`);
             console.log(`  🌐 Open: http://localhost:${PORT}`);
-            console.log(`  📦 Database: PostgreSQL (nama_medical_web)\n`);
+            console.log(`  📦 Database: PostgreSQL (nama_medical_web)`);
+            console.log(`  🔒 Session Store: PostgreSQL (user_sessions)\n`);
         });
     } catch (err) {
         console.error('  ❌ Failed to start:', err.message);
@@ -4474,19 +4561,18 @@ app.put('/api/auth/change-password', requireAuth, async (req, res) => {
         if (!current_password || !new_password) return res.status(400).json({ error: 'Missing fields' });
         if (new_password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
 
-        const user = (await pool.query('SELECT * FROM users WHERE id=$1', [req.session.user.id])).rows[0];
+        const user = (await pool.query('SELECT * FROM system_users WHERE id=$1', [req.session.user.id])).rows[0];
         if (!user) return res.status(404).json({ error: 'User not found' });
 
         // Verify current password
-        const bcrypt = require('bcryptjs');
-        const valid = await bcrypt.compare(current_password, user.password);
+        const valid = await bcrypt.compare(current_password, user.password_hash);
         if (!valid) return res.status(401).json({ error: 'Current password is incorrect', error_ar: 'كلمة المرور الحالية غير صحيحة' });
 
         // Hash and update
         const hashed = await bcrypt.hash(new_password, 10);
-        await pool.query('UPDATE users SET password=$1 WHERE id=$2', [hashed, req.session.user.id]);
+        await pool.query('UPDATE system_users SET password_hash=$1 WHERE id=$2', [hashed, req.session.user.id]);
 
-        logAudit(req.session.user.id, req.session.user.display_name, 'CHANGE_PASSWORD', 'Auth', 'Password changed', req.ip);
+        logAudit(req.session.user.id, req.session.user.name, 'CHANGE_PASSWORD', 'Auth', 'Password changed', req.ip);
         res.json({ success: true });
     } catch (e) { console.error(e); res.status(500).json({ error: 'Server error' }); }
 });
@@ -4505,23 +4591,23 @@ app.get('/api/dashboard/charts', requireAuth, async (req, res) => {
         // Patients by department (this month)
         const byDepartment = (await pool.query(`
             SELECT COALESCE(department,'General') as dept, COUNT(*) as count
-            FROM appointments WHERE date >= DATE_TRUNC('month', CURRENT_DATE)
+            FROM appointments WHERE appt_date >= DATE_TRUNC('month', CURRENT_DATE)::date::text
             GROUP BY department ORDER BY count DESC LIMIT 10
         `)).rows;
 
         // Top doctors by patient count (this month)
         const topDoctors = (await pool.query(`
-            SELECT doctor, COUNT(*) as patients, COALESCE(SUM(i.total),0) as revenue
-            FROM appointments a LEFT JOIN invoices i ON i.description ILIKE '%' || a.doctor || '%'
+            SELECT a.doctor_name as doctor, COUNT(*) as patients, COALESCE(SUM(i.total),0) as revenue
+            FROM appointments a LEFT JOIN invoices i ON i.description ILIKE '%' || a.doctor_name || '%'
             AND i.created_at >= DATE_TRUNC('month', CURRENT_DATE)
-            WHERE a.date >= DATE_TRUNC('month', CURRENT_DATE)
-            GROUP BY a.doctor ORDER BY patients DESC LIMIT 8
+            WHERE a.appt_date >= DATE_TRUNC('month', CURRENT_DATE)::date::text
+            GROUP BY a.doctor_name ORDER BY patients DESC LIMIT 8
         `)).rows;
 
         // Patient flow by hour (today)
         const hourlyFlow = (await pool.query(`
             SELECT EXTRACT(HOUR FROM created_at) as hour, COUNT(*) as count
-            FROM appointments WHERE date = CURRENT_DATE
+            FROM appointments WHERE appt_date = CURRENT_DATE::text
             GROUP BY hour ORDER BY hour
         `)).rows;
 
@@ -5108,10 +5194,13 @@ app.post('/api/academic/trials', requireRole('Admin', 'CMO', 'academic'), async 
     } catch (e) { res.status(500).json({ error: 'Server error' }); }
 });
 
+// ===== SMART SUGGESTIONS API =====
+app.use(require('./src/routes/smart_suggestions.routes'));
+
 // ===== SPA CATCH-ALL (must be LAST route) =====
-app.get('*', (req, res) => {
+app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Not found' });
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    return serveHTMLWithVersion('index.html')(req, res, next);
 });
 
 startServer();

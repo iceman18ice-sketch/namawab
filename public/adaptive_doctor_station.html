@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adaptive Doctor Station | Nama Medical</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Variables & Theme Engine */
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --card-hover: rgba(255, 255, 255, 0.08);
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+
+        [data-specialty="CARDIO_INT"] {
+            --bg-gradient: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            --accent: #ef4444; 
+            --accent-hover: #dc2626;
+        }
+
+        [data-specialty="PEDS_ENT"] {
+            --bg-gradient: linear-gradient(135deg, #064e3b 0%, #047857 100%);
+            --accent: #10b981; 
+            --accent-hover: #059669;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', 'Tajawal', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            overflow: hidden;
+            transition: background 0.5s ease;
+        }
+
+        /* Glassmorphism Classes */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+        }
+
+        /* Layout */
+        .sidebar {
+            width: 320px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            border-right: 1px solid var(--glass-border);
+            border-left: none;
+            background: rgba(0,0,0,0.2);
+        }
+        
+        body[dir="rtl"] .sidebar {
+            border-left: 1px solid var(--glass-border);
+            border-right: none;
+        }
+        
+        .main-workspace {
+            flex: 1;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            overflow-y: auto;
+        }
+
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .title-area h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .title-area p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .demo-controls select {
+            background: rgba(0,0,0,0.3);
+            color: white;
+            border: 1px solid var(--glass-border);
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-family: inherit;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .patient-card {
+            padding: 16px;
+            border-radius: 12px;
+            background: var(--glass-bg);
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .patient-card:hover, .patient-card.active {
+            background: var(--card-hover);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+        .patient-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .patient-name { font-weight: 600; font-size: 16px; }
+        .patient-mrn { font-size: 12px; color: var(--text-muted); }
+        .patient-tag {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        .panel {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .panel h3 {
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 12px;
+        }
+        .panel h3 span.badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            background: var(--accent);
+            border-radius: 12px;
+            margin-left: auto;
+        }
+        body[dir="rtl"] .panel h3 span.badge {
+            margin-left: 0; margin-right: auto;
+        }
+
+        .smart-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 350px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        .smart-list li {
+            padding: 12px 16px;
+            background: rgba(0,0,0,0.15);
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 3px solid transparent;
+            border-right: none;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        body[dir="rtl"] .smart-list li {
+            border-left: none;
+            border-right: 3px solid transparent;
+        }
+        .smart-list li:hover {
+            background: rgba(0,0,0,0.25);
+        }
+        .smart-list li.recommended {
+            border-left-color: var(--accent);
+            background: rgba(255,255,255,0.05);
+        }
+        body[dir="rtl"] .smart-list li.recommended {
+            border-left-color: transparent;
+            border-right-color: var(--accent);
+        }
+        .item-title { font-weight: 500; font-size: 14px; }
+        .item-sub { font-size: 12px; color: var(--text-muted); }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+        
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            display: none; justify-content: center; align-items: center;
+            z-index: 100;
+        }
+        .modal-overlay.active { display: flex; animation: fadeIn 0.3s; }
+        .modal-content {
+            background: var(--bg-gradient);
+            width: 90%; max-width: 1000px; height: 85vh;
+            border-radius: 16px; display: flex; flex-direction: column;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            overflow: hidden;
+        }
+        .modal-body { flex: 1; }
+        .modal-body iframe { width: 100%; height: 100%; border: none; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .skeleton {
+            height: 48px; background: rgba(255,255,255,0.05);
+            border-radius: 8px; animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 0.3; } 100% { opacity: 0.6; } }
+
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar glass-panel">
+        <h2 style="font-size: 18px; margin-bottom: 8px;" id="t_my_patients">My Patients</h2>
+        <div class="search-box">
+            <input type="text" id="t_search" placeholder="Search patients..." style="width:100%; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); color: white; outline: none;">
+        </div>
+        
+        <div id="patientList" style="display: flex; flex-direction: column; gap: 10px; overflow-y: auto;">
+            <div class="patient-card active">
+                <div class="patient-header">
+                    <span class="patient-name">Ahmed Khalid</span>
+                    <span class="patient-tag" style="color:var(--warning);" id="t_waiting">Waiting</span>
+                </div>
+                <div class="patient-mrn">MRN: 100452 • Age 45 • Male</div>
+            </div>
+            <div class="patient-card">
+                <div class="patient-header">
+                    <span class="patient-name">Sarah Al-Faisal</span>
+                    <span class="patient-tag" style="color:var(--success);" id="t_in_room">In Room 2</span>
+                </div>
+                <div class="patient-mrn">MRN: 100889 • Age 32 • Female</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN WORKSPACE -->
+    <main class="main-workspace">
+        <header class="header-bar glass-panel" style="padding: 20px;">
+            <div class="title-area">
+                <h1 id="t_title">Adaptive Clinical Station</h1>
+                <p id="stationSubtitle">Loading specialty context...</p>
+            </div>
+            <div class="demo-controls" style="display: none;">
+                <label style="font-size: 12px; margin-right: 8px;">Simulate:</label>
+                <select id="specialtySelect" onchange="changeSpecialty(this.value)">
+                    <option value="CARDIO_INT">🩺 Interventional Cardiology</option>
+                    <option value="PEDS_ENT">🩺 Pediatric ENT</option>
+                    <option value="NEUROSURGERY">🧠 Neurosurgery</option>
+                </select>
+            </div>
+        </header>
+
+        <div class="grid-layout">
+            <!-- DIAGNOSES -->
+            <div class="panel glass-panel">
+                <h3 style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                    <div><span id="t_smart_diag">📋 Smart Diagnoses</span> <span class="badge" id="diagCount">...</span></div>
+                    <label style="font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                        <input type="checkbox" id="viewAllDiag" onchange="toggleViewAll(this.checked)" style="accent-color: var(--accent); width:16px; height:16px;">
+                        <span id="t_view_all_diag">Show All</span>
+                    </label>
+                </h3>
+                <ul class="smart-list" id="diagList">
+                    <div class="skeleton"></div><div class="skeleton"></div>
+                </ul>
+            </div>
+
+            <!-- LABS / RADS -->
+            <div class="panel glass-panel">
+                <h3 style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                    <div><span id="t_quick_orders">🔬 Quick Orders (CPOE)</span> <span class="badge" id="orderCount">...</span></div>
+                    <label style="font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                        <input type="checkbox" id="viewAllOrders" onchange="toggleViewAll(this.checked)" style="accent-color: var(--accent); width:16px; height:16px;">
+                        <span id="t_view_all_orders">Show All</span>
+                    </label>
+                </h3>
+                <ul class="smart-list" id="orderList">
+                    <div class="skeleton"></div><div class="skeleton"></div>
+                </ul>
+            </div>
+            
+            <!-- CONSENT / COMPLIANCE -->
+            <div class="panel glass-panel" style="grid-column: span 2;">
+                <h3 id="t_compliance">📜 Legal & Compliance (E-Consent)</h3>
+                <div style="display: flex; gap: 16px; align-items: center; background: rgba(0,0,0,0.2); padding: 16px; border-radius: 12px;">
+                    <div style="flex: 1;">
+                        <h4 style="font-size: 16px; margin-bottom: 4px;" id="t_mandatory">Mandatory Procedure Consent</h4>
+                        <p style="font-size: 13px; color: var(--text-muted);" id="t_desc">The system detected a high-risk procedure for this patient based on your specialty. Legal consent is required before proceeding.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openConsentKiosk()" id="t_btn_launch">
+                        ✍️ Launch Digital Consent Kiosk
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal for Consent Kiosk -->
+    <div class="modal-overlay" id="consentModal">
+        <div class="modal-content">
+            <div style="padding: 16px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;">
+                <h3 id="t_signature">Patient Digital Signature</h3>
+                <button class="btn btn-primary" style="background: var(--danger);" onclick="closeConsentKiosk()" id="t_close">✖ Close</button>
+            </div>
+            <div class="modal-body">
+                <iframe id="kioskFrame" src=""></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const TRANSLATIONS = {
+            en: {
+                my_patients: "My Patients",
+                search: "Search patients...",
+                waiting: "Waiting",
+                in_room: "In Room 2",
+                title: "Adaptive Clinical Station",
+                smart_diag: "📋 Smart Diagnoses",
+                quick_orders: "🔬 Quick Orders (CPOE)",
+                compliance: "📜 Legal & Compliance (E-Consent)",
+                mandatory: "Mandatory Procedure Consent",
+                desc: "The system detected a high-risk procedure for this patient based on your specialty. Legal consent is required before proceeding.",
+                btn_launch: "✍️ Launch Digital Consent Kiosk",
+                signature: "Patient Digital Signature",
+                close: "✖ Close",
+                sugg: "Suggested",
+                fast: "Fast Orders",
+                top_pick: "⭐ Top Pick",
+                order: "+ Order",
+                error: "Error connecting to Smart API",
+                view_all: "Show All"
+            },
+            ar: {
+                my_patients: "مرضاي",
+                search: "ابحث عن مريض...",
+                waiting: "بالانتظار",
+                in_room: "في الغرفة 2",
+                title: "محطة الطبيب التكيفية",
+                smart_diag: "📋 التشخيصات الذكية",
+                quick_orders: "🔬 الطلبات السريعة",
+                compliance: "📜 الامتثال والإقرارات",
+                mandatory: "إقرار إجراء إلزامي",
+                desc: "اكتشف النظام إجراءً عالي الخطورة لهذا المريض بناءً على تخصصك. مطلوب موافقة قانونية قبل المتابعة.",
+                btn_launch: "✍️ فتح شاشة التوقيع الإلكتروني",
+                signature: "توقيع المريض الإلكتروني",
+                close: "✖ إغلاق",
+                sugg: "مقترح",
+                fast: "أوامر سريعة",
+                top_pick: "⭐ الأفضل",
+                order: "+ طلب",
+                error: "خطأ في الاتصال بالواجهة الذكية",
+                view_all: "عرض الكل"
+            }
+        };
+
+        let currentLang = 'en';
+        let isViewAllMode = false;
+
+        function toggleViewAll(checked) {
+            isViewAllMode = checked;
+            document.getElementById('viewAllDiag').checked = checked;
+            document.getElementById('viewAllOrders').checked = checked;
+            
+            const params = new URLSearchParams(window.location.search);
+            const spec = params.get('specialty') || 'CARDIO_INT';
+            loadSmartContext(isViewAllMode ? 'ALL' : spec);
+        }
+
+        async function loadSmartContext(specialtyId) {
+            const originalSpec = new URLSearchParams(window.location.search).get('specialty') || 'CARDIO_INT';
+            document.body.setAttribute('data-specialty', specialtyId === 'ALL' ? originalSpec : specialtyId);
+            
+            const contextText = currentLang === 'ar' ? `السياق: ${specialtyId === 'ALL' ? 'الكل' : specialtyId} | الفلترة الذكية ${specialtyId === 'ALL' ? 'متوقفة' : 'فعالة'}` : `Context: ${specialtyId === 'ALL' ? 'ALL' : specialtyId} | Intelligent Filtering ${specialtyId === 'ALL' ? 'Disabled' : 'Active'}`;
+            document.getElementById('stationSubtitle').innerText = contextText;
+
+            document.getElementById('diagList').innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>';
+            document.getElementById('orderList').innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>';
+
+            try {
+                const diagRes = await fetch(`/api/smart/diagnoses?specialty=${specialtyId}`);
+                const diagData = await diagRes.json();
+                
+                const labsRes = await fetch(`/api/smart/labs?specialty=${specialtyId}`);
+                const labsData = await labsRes.json();
+
+                renderDiagnoses(diagData);
+                renderOrders(labsData);
+
+            } catch(e) {
+                console.error("API Error - Ensure backend is running", e);
+                document.getElementById('diagList').innerHTML = `<li style="color:var(--danger)">${TRANSLATIONS[currentLang].error}</li>`;
+            }
+        }
+
+        function renderDiagnoses(data) {
+            const list = document.getElementById('diagList');
+            list.innerHTML = '';
+            document.getElementById('diagCount').innerText = `${data.recommended_count} ${TRANSLATIONS[currentLang].sugg}`;
+
+            data.diagnoses.slice(0, isViewAllMode ? 50 : 8).forEach(d => {
+                const li = document.createElement('li');
+                if(d.is_recommended) li.className = 'recommended';
+                
+                const desc = currentLang === 'ar' ? d.description_ar : d.description_en;
+                const subDesc = currentLang === 'ar' ? d.description_en : d.description_ar;
+                
+                li.innerHTML = `
+                    <div>
+                        <div class="item-title">${d.code} - ${desc}</div>
+                        <div class="item-sub" style="font-family:'Tajawal'">${subDesc || ''}</div>
+                    </div>
+                    ${d.is_recommended ? `<span style="font-size:12px; color:var(--accent); white-space:nowrap;">${TRANSLATIONS[currentLang].top_pick}</span>` : ''}
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        function renderOrders(data) {
+            const list = document.getElementById('orderList');
+            list.innerHTML = '';
+            document.getElementById('orderCount').innerText = `${data.recommended_count} ${TRANSLATIONS[currentLang].fast}`;
+
+            data.labs.slice(0, isViewAllMode ? 50 : 8).forEach(o => {
+                const li = document.createElement('li');
+                if(o.is_recommended) li.className = 'recommended';
+                
+                li.innerHTML = `
+                    <div>
+                        <div class="item-title">${o.test_name}</div>
+                        <div class="item-sub">Category: ${o.category}</div>
+                    </div>
+                    <button class="btn btn-primary" style="padding: 4px 12px; font-size: 12px;">${TRANSLATIONS[currentLang].order}</button>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        function applyTranslations(lang) {
+            currentLang = lang;
+            document.documentElement.lang = lang;
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            
+            const t = TRANSLATIONS[lang];
+            document.getElementById('t_my_patients').innerText = t.my_patients;
+            document.getElementById('t_search').placeholder = t.search;
+            document.getElementById('t_waiting').innerText = t.waiting;
+            document.getElementById('t_in_room').innerText = t.in_room;
+            document.getElementById('t_title').innerText = t.title;
+            document.getElementById('t_smart_diag').innerText = t.smart_diag;
+            document.getElementById('t_quick_orders').innerText = t.quick_orders;
+            document.getElementById('t_compliance').innerText = t.compliance;
+            document.getElementById('t_mandatory').innerText = t.mandatory;
+            document.getElementById('t_desc').innerText = t.desc;
+            document.getElementById('t_btn_launch').innerText = t.btn_launch;
+            document.getElementById('t_signature').innerText = t.signature;
+            document.getElementById('t_close').innerText = t.close;
+            document.getElementById('t_view_all_diag').innerText = t.view_all;
+            document.getElementById('t_view_all_orders').innerText = t.view_all;
+        }
+
+        function openConsentKiosk() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const spec = urlParams.get('specialty') || 'CARDIO_INT';
+            document.getElementById('kioskFrame').src = `/consent_kiosk.html?specialty=${spec}&patient=1`;
+            document.getElementById('consentModal').classList.add('active');
+        }
+
+        function closeConsentKiosk() {
+            document.getElementById('consentModal').classList.remove('active');
+            document.getElementById('kioskFrame').src = "";
+        }
+
+        window.onload = () => {
+            const params = new URLSearchParams(window.location.search);
+            const lang = params.get('lang') || 'en';
+            const spec = params.get('specialty') || 'CARDIO_INT';
+            
+            applyTranslations(lang);
+            loadSmartContext(spec);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,3 @@
+Specialty_ID,Specialty_Name,Diagnosis_Count,Lab_Count,Rad_Count,Consent_Count,Status
+CARDIO_INT,"Interventional Cardiology",35,35,35,4,FULL_COVERAGE
+PEDS_ENT,"Pediatric ENT",36,35,35,4,FULL_COVERAGE

@@ -1,0 +1,64 @@
+# ============================================
+# Nama Medical ERP — Docker Compose
+# Full stack: Node.js App + PostgreSQL
+# ============================================
+version: '3.8'
+
+services:
+  # ---- PostgreSQL Database ----
+  db:
+    image: postgres:16-alpine
+    container_name: nama-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: nama_medical_web
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-nama_secure_2026}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d nama_medical_web"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nama-network
+
+  # ---- Node.js Application ----
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nama-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: nama_medical_web
+      DB_USER: postgres
+      DB_PASSWORD: ${DB_PASSWORD:-nama_secure_2026}
+      DB_MAX_CONNECTIONS: 20
+      PORT: 3000
+      NODE_ENV: production
+      SESSION_SECRET: ${SESSION_SECRET:-nama-medical-erp-secret-x7k9m2p4q8w1}
+    ports:
+      - "3000:3000"
+    volumes:
+      - uploads:/app/public/uploads
+    networks:
+      - nama-network
+
+volumes:
+  pgdata:
+    driver: local
+  uploads:
+    driver: local
+
+networks:
+  nama-network:
+    driver: bridge
