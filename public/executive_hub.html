@@ -446,16 +446,56 @@
 
         // Real-time Critical Events
         const socket = io();
-        socket.on('system_critical_notification', (data) => {
-            // Play Siren Sound
-            try {
-                let audioUrl = 'https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3'; // Default Siren
-                if (data.priority === 'AMBULANCE') {
-                    audioUrl = 'https://actions.google.com/sounds/v1/emergency/ambulance_siren.ogg';
+        // Utility to generate VOICE ANNOUNCEMENT and AMBULANCE SIREN ONLY
+        function playLoudSiren(type) {
+            let speechInterval, audioEl;
+            
+            if (type === 'AMBULANCE') {
+                // 1. Real Ambulance Audio ONLY (No Voice)
+                try {
+                    audioEl = new Audio('https://actions.google.com/sounds/v1/emergency/ambulance_siren.ogg');
+                    audioEl.loop = true;
+                    audioEl.volume = 1.0;
+                    audioEl.play().catch(e => console.log('Audio blocked', e));
+                } catch(e) {}
+            } else {
+                // 2. Text-to-Speech Announcement ONLY (No Siren)
+                try {
+                    if ('speechSynthesis' in window) {
+                        const codes = {
+                            'BLUE': 'Code Blue', 'RED': 'Code Red', 'PINK': 'Code Pink',
+                            'BLACK': 'Code Black', 'YELLOW': 'Code Yellow',
+                            'ORANGE': 'Doctor required immediately'
+                        };
+                        const codeName = codes[type] || 'Emergency';
+                        const msgText = 'Attention please. ' + codeName + '. ' + codeName + '.';
+                        
+                        const speak = () => {
+                            const msg = new SpeechSynthesisUtterance(msgText);
+                            msg.lang = 'en-US';
+                            msg.rate = 0.85;
+                            msg.volume = 1.0;
+                            window.speechSynthesis.speak(msg);
+                        };
+                        
+                        speak();
+                        speechInterval = setInterval(speak, 5000); // Repeat every 5 seconds
+                    }
+                } catch(e) {}
+            }
+            
+            return {
+                stop: () => {
+                    if (speechInterval) clearInterval(speechInterval);
+                    if (audioEl) { audioEl.pause(); audioEl.currentTime = 0; }
+                    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
                 }
-                const audio = new Audio(audioUrl);
-                audio.play().catch(e => console.log('Audio autoplay blocked by browser.'));
-            } catch(e){}
+            };
+        }
+
+        socket.on('system_critical_notification', (data) => {
+            // Play Synthesized Loud Siren
+            window.currentSiren = playLoudSiren(data.priority);
 
             // Set colors based on priority
             let colorHex = '#ff4d4d'; // Red default
@@ -484,10 +524,10 @@
                         <p><strong>الحدث:</strong> ${data.message}</p>
                         <p style="color: #fde047; font-size: 1.2rem;">تنبيه للمركز التنفيذي: قد يستدعي الأمر تخصيص موارد إضافية (Staffing/Bed Management).</p>
                     </div>
-                    <button onclick="this.parentElement.parentElement.remove()" 
+                    <button onclick="this.parentElement.parentElement.remove(); if(window.currentSiren) window.currentSiren.stop();" 
                             style="padding: 15px 30px; margin-top: 20px; background: ${colorHex}; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1.2rem; transition: opacity 0.3s;"
                             onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
-                        تأكيد الاطلاع (Acknowledge)
+                        تأكيد الاطلاع وإيقاف الإنذار (Acknowledge)
                     </button>
                 </div>
             `;
