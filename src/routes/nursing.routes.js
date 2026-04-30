@@ -8,13 +8,18 @@ const router = express.Router();
 const { pool } = require('../../db_postgres');
 const { requireAuth, requireCatalogAccess, requireRole, MAX_DISCOUNT_BY_ROLE } = require('../middleware/auth');
 const { logAudit, calcVAT, addVAT } = require('../utils/helpers');
-const { emitClinicalAlert } = require('../services/socket.service');
+const { emitClinicalAlert, sendCriticalAlert } = require('../services/socket.service');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
 
 
 // NURSING
+// ===== NURSING =====
+router.get('/api/nursing/vitals', requireAuth, async (req, res) => {
+    try { res.json((await pool.query('SELECT * FROM nursing_vitals ORDER BY id DESC LIMIT 100')).rows); }
+    catch (e) { res.status(500).json({ error: 'Server error' }); }
+});
 // ===== NURSING =====
 router.get('/api/nursing/vitals', requireAuth, async (req, res) => {
     try { res.json((await pool.query('SELECT * FROM nursing_vitals ORDER BY id DESC LIMIT 100')).rows); }
@@ -46,14 +51,25 @@ router.get('/api/emar/orders', requireAuth, async (req, res) => {
         else res.json((await pool.query('SELECT * FROM emar_orders WHERE status=$1 ORDER BY created_at DESC', ['Active'])).rows);
     } catch (e) { res.status(500).json({ error: 'Server error' }); }
 });
+
 router.post('/api/emar/orders', requireAuth, async (req, res) => {
     try {
         const { patient_id, patient_name, medication, dose, route, frequency, start_date } = req.body;
         const result = await pool.query('INSERT INTO emar_orders (patient_id, patient_name, medication, dose, route, frequency, start_date, prescriber) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
             [patient_id, patient_name || '', medication || '', dose || '', route || 'Oral', frequency || 'TID', start_date || new Date().toISOString().split('T')[0], req.session.user.name]);
-        res.json(result.rows[0]);
+        
+        const newOrder = result.rows[0];
+        // Notify Pharmacy via Socket
+        emitClinicalAlert(patient_id, {
+            type: 'info',
+            time: 'الآن',
+            text: `وصفة طبية جديدة: ${medication} (${dose}) للمريض #${patient_id}`
+        });
+
+        res.json(newOrder);
     } catch (e) { res.status(500).json({ error: 'Server error' }); }
 });
+
 router.get('/api/emar/administrations', requireAuth, async (req, res) => {
     try {
         const { order_id } = req.query;
@@ -61,6 +77,7 @@ router.get('/api/emar/administrations', requireAuth, async (req, res) => {
         else res.json((await pool.query('SELECT * FROM emar_administrations ORDER BY created_at DESC LIMIT 50')).rows);
     } catch (e) { res.status(500).json({ error: 'Server error' }); }
 });
+
 router.post('/api/emar/administrations', requireAuth, async (req, res) => {
     try {
         const { emar_order_id, patient_id, medication, dose, scheduled_time, status, reason_not_given, notes } = req.body;
@@ -72,11 +89,11 @@ router.post('/api/emar/administrations', requireAuth, async (req, res) => {
 
 
 // NURSING CARE PLANS
-// ===== NURSING CARE PLANS =====
 router.get('/api/nursing/care-plans', requireAuth, async (req, res) => {
     try { res.json((await pool.query('SELECT * FROM nursing_care_plans ORDER BY created_at DESC')).rows); }
     catch (e) { res.status(500).json({ error: 'Server error' }); }
 });
+
 router.post('/api/nursing/care-plans', requireAuth, async (req, res) => {
     try {
         const { patient_id, patient_name, diagnosis, priority, goals, interventions, expected_outcomes } = req.body;
@@ -85,10 +102,12 @@ router.post('/api/nursing/care-plans', requireAuth, async (req, res) => {
         res.json(result.rows[0]);
     } catch (e) { res.status(500).json({ error: 'Server error' }); }
 });
+
 router.get('/api/nursing/assessments', requireAuth, async (req, res) => {
     try { res.json((await pool.query('SELECT * FROM nursing_assessments ORDER BY created_at DESC LIMIT 50')).rows); }
     catch (e) { res.status(500).json({ error: 'Server error' }); }
 });
+
 router.post('/api/nursing/assessments', requireAuth, async (req, res) => {
     try {
         const { patient_id, patient_name, assessment_type, fall_risk_score, braden_score, pain_score, gcs_score, shift, notes } = req.body;
@@ -100,7 +119,6 @@ router.post('/api/nursing/assessments', requireAuth, async (req, res) => {
 
 
 // NURSING ASSESSMENT SCALES
-// ===== NURSING ASSESSMENT SCALES =====
 router.post('/api/nursing/assessment', requireAuth, async (req, res) => {
     try {
         const { patient_id, pain_scale, fall_risk_score, braden_score, notes } = req.body;
@@ -222,10 +240,20 @@ router.post('/api/nursing/flowsheet/entry', requireAuth, async (req, res) => {
         `, [patient_id, nurse_id, parameter_type, parameter_value, unit || '', is_critical]);
         
         if (is_critical) {
+            // Send standard alert
             emitClinicalAlert(patient_id, {
                 type: 'urgent',
                 time: 'الآن',
                 text: `🚨 تنبيه حرج: ${parameter_type} = ${parameter_value} للمريض #${patient_id}. تدخل فوري مطلوب!`
+            });
+
+            // Send Full-Screen Critical Promt Overlay
+            sendCriticalAlert({
+                patientId: patient_id,
+                patientName: `مريض #${patient_id}`,
+                location: `غرفة التنويم / العناية`,
+                message: `انخفاض ${parameter_type} إلى مستوى حرج (${parameter_value})`,
+                actionRequired: `التوجه فوراً وتقييم الحالة / استدعاء فريق الإنعاش السريع`
             });
         }
         

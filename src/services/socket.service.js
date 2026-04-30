@@ -69,6 +69,24 @@ function emitClinicalAlert(patientId, alert) {
 }
 
 /**
+ * Send a Critical System Alert (Glassmorphism Overlay)
+ */
+function sendCriticalAlert(alertData) {
+    if (!io) return;
+    const payload = {
+        type: 'CRITICAL_ALERT',
+        priority: 'RED',
+        timestamp: new Date(),
+        patientId: alertData.patientId || 'N/A',
+        patientName: alertData.patientName || 'مريض غير مسجل',
+        location: alertData.location || 'ER / Ward',
+        message: alertData.message,
+        actionRequired: alertData.actionRequired || 'التدخل الفوري'
+    };
+    io.emit('system_critical_notification', payload);
+}
+
+/**
  * Send notification to a specific user
  */
 function emitToUser(userId, event, data) {
@@ -130,6 +148,7 @@ function getOnlineCount() {
 module.exports = {
     setupSocketIO,
     emitClinicalAlert,
+    sendCriticalAlert,
     emitToUser,
     emitToDepartment,
     emitToAll,

@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محطة الصيدلة والمخزون - Pharmacy Command Center</title>
+    <!-- Tailwind CSS (V3) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#064E3B', /* Dark Emerald */
+                        secondary: '#0F172A',
+                        accent: '#10B981', /* Emerald */
+                        danger: '#EF4444',
+                        warning: '#F59E0B'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Socket.io -->
+    <script src="/socket.io/socket.io.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #022c22 0%, #0f172a 100%);
+            color: #ecfdf5;
+            min-height: 100vh;
+        }
+        
+        /* Glassmorphism Styles */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            border-radius: 1rem;
+        }
+
+        .glass-input {
+            background: rgba(2, 44, 34, 0.6);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: white;
+        }
+
+        .glass-input:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+        }
+
+        /* Critical Pulse for Low Stock */
+        @keyframes pulse-orange {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+        .low-stock {
+            border: 1px solid #f59e0b !important;
+            animation: pulse-orange 2s infinite;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
+        ::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.5); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(16, 185, 129, 0.8); }
+
+        /* Toast Animation */
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .toast-enter { animation: slideInRight 0.3s ease-out forwards; }
+    </style>
+</head>
+<body class="p-4 md:p-6 lg:p-8">
+
+    <!-- Header -->
+    <header class="flex justify-between items-center mb-8 glass-panel p-4">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center text-xl shadow-lg">
+                <i class="fa-solid fa-pills"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-l from-emerald-400 to-teal-300">محطة الصيدلة - Pharmacy Command</h1>
+                <p class="text-sm text-emerald-200/70">Inventory & e-Dispensing Loop | <span id="clock"></span></p>
+            </div>
+        </div>
+        <div class="flex gap-4">
+            <button onclick="fetchData()" class="bg-emerald-600 hover:bg-emerald-500 px-6 py-2 rounded-lg font-semibold transition shadow-lg shadow-emerald-500/30 text-sm">
+                <i class="fa-solid fa-sync mr-2"></i> تحديث (Refresh)
+            </button>
+        </div>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Right Column: Inventory Overview (col-span-8) -->
+        <div class="lg:col-span-8 flex flex-col gap-6">
+            <div class="glass-panel p-5 flex-1">
+                <div class="flex justify-between items-center mb-4 border-b border-emerald-900/50 pb-3">
+                    <h2 class="text-lg font-bold flex items-center gap-2 text-emerald-400">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                        المخزون الطبي (Medical Inventory)
+                    </h2>
+                    <div class="relative">
+                        <i class="fa-solid fa-search absolute right-3 top-2.5 text-emerald-500/50"></i>
+                        <input type="text" id="searchInput" placeholder="بحث باسم الدواء أو الكود..." class="glass-input rounded-full pr-10 pl-4 py-1.5 text-sm w-64" onkeyup="filterInventory()">
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left" dir="ltr">
+                        <thead>
+                            <tr class="text-emerald-500/70 text-sm border-b border-emerald-900/30">
+                                <th class="pb-2 font-semibold">Code</th>
+                                <th class="pb-2 font-semibold text-right" dir="rtl">الصنف (Item)</th>
+                                <th class="pb-2 font-semibold">Category</th>
+                                <th class="pb-2 font-semibold text-center">Stock</th>
+                                <th class="pb-2 font-semibold">Price (SAR)</th>
+                                <th class="pb-2 font-semibold text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTable" class="text-sm divide-y divide-emerald-900/20">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Left Column: Pending Prescriptions & Dispensing (col-span-4) -->
+        <div class="lg:col-span-4 flex flex-col gap-6">
+            
+            <!-- Pending Prescriptions -->
+            <div class="glass-panel p-5">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold flex items-center gap-2 text-blue-400">
+                        <i class="fa-solid fa-file-prescription"></i>
+                        الوصفات المعلقة (Pending eMAR)
+                    </h2>
+                    <span class="bg-blue-600/30 text-blue-300 text-xs px-2 py-1 rounded-full border border-blue-500/30" id="rxCount">0</span>
+                </div>
+                
+                <div id="rxList" class="flex flex-col gap-3 max-h-[300px] overflow-y-auto pr-2">
+                    <!-- Injected by JS -->
+                    <div class="text-center text-emerald-700/50 py-6">
+                        <i class="fa-solid fa-check-circle text-3xl mb-2"></i>
+                        <p class="text-sm">لا توجد وصفات معلقة</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manual Dispense Form -->
+            <div class="glass-panel p-5 bg-gradient-to-b from-emerald-900/20 to-transparent">
+                <h2 class="text-lg font-bold flex items-center gap-2 text-emerald-400 mb-4">
+                    <i class="fa-solid fa-hand-holding-medical"></i>
+                    صرف وتخصيص مباشر (Direct Dispense)
+                </h2>
+                
+                <form id="dispenseForm" class="flex flex-col gap-3">
+                    <div>
+                        <label class="block text-xs text-emerald-200/70 mb-1">رقم المريض (Patient ID)</label>
+                        <input type="number" id="dispPatientId" required class="glass-input w-full rounded-lg px-3 py-2 text-sm" placeholder="Ex: 1">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs text-emerald-200/70 mb-1">كود الصنف (Item Code)</label>
+                        <input type="text" id="dispItemCode" required class="glass-input w-full rounded-lg px-3 py-2 text-sm uppercase" placeholder="Ex: MED-001">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs text-emerald-200/70 mb-1">الكمية (Quantity)</label>
+                        <input type="number" id="dispQty" required min="1" value="1" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
+                    </div>
+
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-lg shadow-lg shadow-emerald-600/30 transition mt-2 text-sm">
+                        <i class="fa-solid fa-check mr-1"></i> صرف وتسجيل مالي (Dispense & Bill)
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 flex flex-col gap-2 z-50"></div>
+
+    <script>
+        // Clock
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString('ar-SA');
+        }, 1000);
+
+        // Toast System
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            let bgClass = 'bg-slate-800 border-emerald-500/50';
+            let icon = 'fa-info-circle text-emerald-400';
+            
+            if (type === 'urgent') { bgClass = 'bg-red-900/90 border-red-500/50'; icon = 'fa-triangle-exclamation text-red-400'; }
+            if (type === 'success') { bgClass = 'bg-emerald-900/90 border-emerald-500/50'; icon = 'fa-check-circle text-emerald-400'; }
+            if (type === 'warning') { bgClass = 'bg-amber-900/90 border-amber-500/50'; icon = 'fa-bell text-amber-400'; }
+
+            toast.className = `toast-enter ${bgClass} border text-white px-4 py-3 rounded-lg shadow-xl flex items-start gap-3 max-w-sm backdrop-blur-md`;
+            toast.innerHTML = `<i class="fa-solid ${icon} mt-0.5"></i><div class="text-sm font-medium">${message}</div>`;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // --- Socket.io Integration ---
+        const socket = io();
+        socket.on('connect', () => {
+            console.log('Connected to Pharmacy Command');
+            showToast('تم الاتصال بنظام الصيدلية', 'success');
+        });
+
+        // Listen for clinical alerts (general room)
+        socket.on('clinical-alert', (alertData) => {
+            // We listen to pharmacy specific alerts or general if needed
+            if(alertData.text.includes('وصفة') || alertData.text.includes('دواء')) {
+                showToast(alertData.text, 'info');
+                fetchData();
+            }
+        });
+
+        // --- Data Fetching ---
+        let inventoryData = [];
+
+        async function fetchData() {
+            await fetchInventory();
+            await fetchPrescriptions();
+        }
+
+        async function fetchInventory() {
+            try {
+                const res = await fetch('/api/pharmacy/inventory');
+                inventoryData = await res.json();
+                renderInventory(inventoryData);
+                
+                // Check globally for low stock and alert once
+                const lowStockItems = inventoryData.filter(i => i.current_stock <= i.min_stock_level);
+                if (lowStockItems.length > 0) {
+                    showToast(`تنبيه: يوجد ${lowStockItems.length} أصناف وصلت للحد الأدنى من المخزون!`, 'warning');
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function renderInventory(data) {
+            const tbody = document.getElementById('inventoryTable');
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-emerald-500/50">لا يوجد مخزون</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = data.map(item => {
+                const isLow = item.current_stock <= item.min_stock_level;
+                return `
+                <tr class="hover:bg-emerald-900/20 transition ${isLow ? 'bg-amber-900/10' : ''}">
+                    <td class="py-2.5 font-mono text-xs text-emerald-300">${item.item_code}</td>
+                    <td class="py-2.5" dir="rtl">
+                        <div class="font-bold text-sm">${item.item_name_ar}</div>
+                        <div class="text-xs text-emerald-200/50">${item.item_name_en}</div>
+                    </td>
+                    <td class="py-2.5 text-xs text-emerald-200/70">${item.category}</td>
+                    <td class="py-2.5 text-center">
+                        <span class="px-2 py-0.5 rounded text-xs font-bold ${isLow ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-emerald-500/20 text-emerald-300'}">
+                            ${item.current_stock}
+                        </span>
+                    </td>
+                    <td class="py-2.5 font-mono text-xs">${parseFloat(item.unit_price).toFixed(2)}</td>
+                    <td class="py-2.5 text-center">
+                        <button onclick="fillDispense('${item.item_code}')" class="text-xs bg-emerald-700/50 hover:bg-emerald-600 text-emerald-100 px-2 py-1 rounded transition border border-emerald-600/50">
+                            صرف
+                        </button>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        function filterInventory() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = inventoryData.filter(i => 
+                i.item_code.toLowerCase().includes(query) || 
+                i.item_name_en.toLowerCase().includes(query) ||
+                i.item_name_ar.includes(query)
+            );
+            renderInventory(filtered);
+        }
+
+        function fillDispense(code) {
+            document.getElementById('dispItemCode').value = code;
+            document.getElementById('dispQty').value = 1;
+            document.getElementById('dispPatientId').focus();
+        }
+
+        async function fetchPrescriptions() {
+            try {
+                const res = await fetch('/api/pharmacy/prescriptions');
+                const rx = await res.json();
+                const list = document.getElementById('rxList');
+                document.getElementById('rxCount').innerText = rx.length;
+                
+                if (rx.length === 0) {
+                    list.innerHTML = `<div class="text-center text-emerald-700/50 py-6"><i class="fa-solid fa-check-circle text-3xl mb-2"></i><p class="text-sm">لا توجد وصفات معلقة</p></div>`;
+                    return;
+                }
+                
+                list.innerHTML = rx.map(r => `
+                    <div class="bg-slate-800/60 border border-blue-500/20 p-3 rounded-lg">
+                        <div class="flex justify-between items-start mb-1">
+                            <span class="text-xs bg-blue-900/50 text-blue-300 px-1.5 py-0.5 rounded border border-blue-700/50">#Order-${r.id}</span>
+                            <span class="text-xs text-gray-400">Patient #${r.patient_id}</span>
+                        </div>
+                        <h4 class="font-bold text-sm text-blue-100">${r.medication}</h4>
+                        <p class="text-xs text-blue-200/60 mb-2">${r.dose} | ${r.route} | ${r.frequency}</p>
+                        <button onclick="document.getElementById('dispPatientId').value='${r.patient_id}'; document.getElementById('dispItemCode').focus();" class="w-full text-xs bg-blue-600/40 hover:bg-blue-600 border border-blue-500/50 text-blue-100 py-1.5 rounded transition">
+                            تحضير وتخصيص كود الدواء
+                        </button>
+                    </div>
+                `).join('');
+            } catch (e) { console.error(e); }
+        }
+
+        // Dispense Form Submit
+        document.getElementById('dispenseForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الصرف...';
+            btn.disabled = true;
+
+            const payload = {
+                patient_id: document.getElementById('dispPatientId').value,
+                item_code: document.getElementById('dispItemCode').value.toUpperCase(),
+                quantity: document.getElementById('dispQty').value
+            };
+
+            try {
+                const res = await fetch('/api/pharmacy/dispense', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast('تم الخصم من المخزون وتسجيل التكلفة في فاتورة المريض بنجاح.', 'success');
+                    if (data.lowStockAlert) {
+                        showToast(`تنبيه: رصيد الصنف ${payload.item_code} وصل للحد الأدنى!`, 'warning');
+                    }
+                    e.target.reset();
+                    fetchData(); // Refresh all
+                } else {
+                    showToast(data.error || 'فشل عملية الصرف', 'urgent');
+                }
+            } catch (err) {
+                showToast('خطأ في الاتصال بالخادم', 'urgent');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        // Init
+        document.addEventListener('DOMContentLoaded', fetchData);
+    </script>
+</body>
+</html>

@@ -9,6 +9,23 @@
     <link rel="stylesheet" href="/css/shell-v3.css">
     <link rel="stylesheet" href="/css/premium-v3.css">
     <style>
+        .critical-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 0, 0, 0.2); backdrop-filter: blur(10px);
+            z-index: 9999; display: flex; justify-content: center; align-items: center;
+            animation: pulse-red 1.5s infinite;
+        }
+        .critical-card {
+            background: rgba(255, 255, 255, 0.1); border: 2px solid #ff4d4d;
+            border-radius: 20px; padding: 30px; color: white; text-align: center;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5); backdrop-filter: blur(20px);
+        }
+        @keyframes pulse-red {
+            0% { background: rgba(255, 0, 0, 0.2); }
+            50% { background: rgba(255, 0, 0, 0.4); }
+            100% { background: rgba(255, 0, 0, 0.2); }
+        }
+
         /* Command Center Custom Aesthetics */
         :root {
             --cc-bg-gradient: linear-gradient(135deg, #020617 0%, #0f172a 100%);
@@ -587,6 +604,35 @@
         socket.on('clinical-alert', (alert) => {
             console.log('Received Clinical Alert:', alert);
             addFeedItem(alert);
+        });
+
+        socket.on('system_critical_notification', (data) => {
+            // Play Siren Sound (Mock URL, browser might block if not interacted)
+            try {
+                const audio = new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg');
+                audio.play().catch(e => console.log('Audio autoplay blocked by browser.'));
+            } catch(e){}
+
+            // Create Visual Prompt
+            const overlay = document.createElement('div');
+            overlay.className = 'critical-overlay';
+            overlay.innerHTML = `
+                <div class="critical-card">
+                    <h1 style="font-size: 3rem; color: #ff4d4d; margin-bottom: 20px;">🚨 حالة حرجة جداً 🚨</h1>
+                    <div style="font-size: 1.5rem; margin: 20px 0; text-align: right; line-height: 1.8;" dir="rtl">
+                        <p><strong>المريض:</strong> ${data.patientName}</p>
+                        <p><strong>الموقع:</strong> ${data.location}</p>
+                        <p><strong>السبب:</strong> ${data.message}</p>
+                        <p style="color: #fde047;"><strong>الإجراء المطلوب:</strong> ${data.actionRequired}</p>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" 
+                            style="padding: 15px 30px; margin-top: 20px; background: #ff4d4d; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1.2rem; transition: background 0.3s;"
+                            onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ff4d4d'">
+                        تأكيد الاستجابة (Acknowledge)
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
         });
 
         socket.on('lab-result', (result) => {
