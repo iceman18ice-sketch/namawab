@@ -75,7 +75,7 @@ function sendCriticalAlert(alertData) {
     if (!io) return;
     const payload = {
         type: 'CRITICAL_ALERT',
-        priority: 'RED',
+        priority: alertData.priority || 'RED',
         timestamp: new Date(),
         patientId: alertData.patientId || 'N/A',
         patientName: alertData.patientName || 'مريض غير مسجل',

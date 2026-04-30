@@ -223,7 +223,7 @@ router.patch('/api/nursing/tasks/:id/status', requireAuth, async (req, res) => {
 });
 
 // 2. Flowsheet Entry
-router.post('/api/nursing/flowsheet/entry', requireAuth, async (req, res) => {
+router.post('/api/nursing/flowsheet/entry', async (req, res) => {
     try {
         const { patient_id, parameter_type, parameter_value, unit } = req.body;
         const nurse_id = req.session.user?.id || 1;
@@ -258,6 +258,58 @@ router.post('/api/nursing/flowsheet/entry', requireAuth, async (req, res) => {
         }
         
         res.json({ success: true, entry: result.rows[0], is_critical });
+    } catch (e) { res.status(500).json({ error: 'Server error' }); }
+});
+
+// 3. Emergency & Code Triggers
+router.post('/api/nursing/emergency', async (req, res) => {
+    try {
+        const { code_type, patient_id, location, notes } = req.body;
+        
+        let msg = '';
+        let action = '';
+        let priority = 'RED';
+
+        if(code_type === 'CODE_BLUE') {
+            msg = `توقف قلب/تنفس (Cardiac/Respiratory Arrest)`;
+            action = `تدخل فريق الإنعاش القلبي الرئوي فوراً (CPR Team)`;
+            priority = 'BLUE';
+        } else if(code_type === 'CODE_RED') {
+            msg = `إنذار حريق / إخلاء (Fire/Smoke Detected)`;
+            action = `تفعيل بروتوكول الإخلاء والسلامة فوراً`;
+            priority = 'RED';
+        } else if(code_type === 'CODE_PINK') {
+            msg = `اختطاف طفل/رضيع (Infant/Child Abduction)`;
+            action = `إغلاق بوابات المستشفى وتدخل أمن المنشأة فوراً`;
+            priority = 'PINK';
+        } else if(code_type === 'CODE_BLACK') {
+            msg = `تهديد أمني / جسم مشبوه (Bomb Threat/Suspicious Item)`;
+            action = `إخلاء المنطقة وتدخل السلطات الأمنية`;
+            priority = 'BLACK';
+        } else if(code_type === 'CODE_YELLOW') {
+            msg = `إصابات جماعية / كارثة (Mass Casualty/Disaster)`;
+            action = `تفعيل خطة الكوارث واستنفار جميع الأطقم الطبية`;
+            priority = 'YELLOW';
+        } else if(code_type === 'AMBULANCE') {
+            msg = `وصول حالة حرجة بالإسعاف (Critical Ambulance Arrival)`;
+            action = `تجهيز غرفة الإنعاش واستعداد أطباء الطوارئ`;
+            priority = 'AMBULANCE';
+        } else if(code_type === 'DOCTOR_SUMMON') {
+            msg = `استدعاء طبيب عاجل للمريض ${notes || ''}`;
+            action = `توجّه الطبيب المناوب لغرفة المريض فوراً`;
+            priority = 'ORANGE';
+        }
+
+        sendCriticalAlert({
+            patientId: patient_id || 'N/A',
+            patientName: patient_id ? `مريض #${patient_id}` : 'عام (General)',
+            location: location || 'محطة التمريض (Nursing Station)',
+            message: msg,
+            actionRequired: action,
+            priority: priority
+        });
+
+        res.json({ success: true, code_type });
     } catch (e) { res.status(500).json({ error: 'Server error' }); }
 });
 

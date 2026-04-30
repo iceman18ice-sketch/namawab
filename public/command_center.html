@@ -607,27 +607,46 @@
         });
 
         socket.on('system_critical_notification', (data) => {
-            // Play Siren Sound (Mock URL, browser might block if not interacted)
+            // Play Siren Sound
             try {
-                const audio = new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg');
+                let audioUrl = 'https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3'; // Default Siren
+                if (data.priority === 'AMBULANCE') {
+                    audioUrl = 'https://actions.google.com/sounds/v1/emergency/ambulance_siren.ogg';
+                }
+                const audio = new Audio(audioUrl);
                 audio.play().catch(e => console.log('Audio autoplay blocked by browser.'));
             } catch(e){}
+
+            // Set colors based on priority
+            let colorHex = '#ff4d4d'; // Red default
+            if(data.priority === 'BLUE') colorHex = '#3b82f6';
+            if(data.priority === 'ORANGE') colorHex = '#f59e0b';
+            if(data.priority === 'PINK') colorHex = '#ec4899';
+            if(data.priority === 'BLACK') colorHex = '#1f2937';
+            if(data.priority === 'YELLOW') colorHex = '#eab308';
+            if(data.priority === 'AMBULANCE') colorHex = '#6366f1';
+
+            // Utility to convert hex to rgb for rgba
+            const hexToRgb = (hex) => {
+                const bigint = parseInt(hex.replace('#',''), 16);
+                return `${(bigint >> 16) & 255},${(bigint >> 8) & 255},${bigint & 255}`;
+            };
 
             // Create Visual Prompt
             const overlay = document.createElement('div');
             overlay.className = 'critical-overlay';
+            overlay.style.background = `rgba(${hexToRgb(colorHex)}, 0.2)`;
             overlay.innerHTML = `
-                <div class="critical-card">
-                    <h1 style="font-size: 3rem; color: #ff4d4d; margin-bottom: 20px;">🚨 حالة حرجة جداً 🚨</h1>
+                <div class="critical-card" style="border-color: ${colorHex}; box-shadow: 0 0 30px ${colorHex}80;">
+                    <h1 style="font-size: 3rem; color: ${colorHex}; margin-bottom: 20px;">🚨 حالة طارئة 🚨</h1>
                     <div style="font-size: 1.5rem; margin: 20px 0; text-align: right; line-height: 1.8;" dir="rtl">
-                        <p><strong>المريض:</strong> ${data.patientName}</p>
-                        <p><strong>الموقع:</strong> ${data.location}</p>
-                        <p><strong>السبب:</strong> ${data.message}</p>
+                        <p><strong>المريض/المكان:</strong> ${data.patientName || data.location}</p>
+                        <p><strong>الحدث:</strong> ${data.message}</p>
                         <p style="color: #fde047;"><strong>الإجراء المطلوب:</strong> ${data.actionRequired}</p>
                     </div>
                     <button onclick="this.parentElement.parentElement.remove()" 
-                            style="padding: 15px 30px; margin-top: 20px; background: #ff4d4d; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1.2rem; transition: background 0.3s;"
-                            onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ff4d4d'">
+                            style="padding: 15px 30px; margin-top: 20px; background: ${colorHex}; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1.2rem; transition: opacity 0.3s;"
+                            onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
                         تأكيد الاستجابة (Acknowledge)
                     </button>
                 </div>
