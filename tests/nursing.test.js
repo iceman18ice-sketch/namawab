@@ -14,13 +14,16 @@ jest.mock('../src/services/socket.service', () => ({
 }));
 
 // Mock PostgreSQL Pool
-const { pool } = require('../../db_postgres'); // Note: The path depends on where it is, let's mock the whole pg
 jest.mock('pg', () => {
     const mPool = {
         query: jest.fn()
     };
     return { Pool: jest.fn(() => mPool) };
 });
+
+jest.mock('../db_postgres', () => ({
+    pool: { query: jest.fn() }
+}));
 
 // Since the app uses dotenv and complex DB, it's easier to just mock the routes directly with an Express wrapper
 const nursingRoutes = require('../src/routes/nursing.routes');
@@ -34,10 +37,8 @@ describe('Nursing Execution Loop API', () => {
     });
 
     test('PATCH /api/nursing/tasks/:id/status should emit clinical_alert on Completion', async () => {
-        // Mock DB query to return the updated task
-        const requirePg = require('pg');
-        const poolInst = new requirePg.Pool();
-        poolInst.query.mockResolvedValueOnce({
+        const db = require('../db_postgres');
+        db.pool.query.mockResolvedValueOnce({
             rows: [{
                 task_id: 1,
                 patient_id: 42,

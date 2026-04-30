@@ -180,12 +180,23 @@ router.patch('/api/nursing/tasks/:id/status', requireAuth, async (req, res) => {
         const task = result.rows[0];
         
         if (task && status === 'Completed') {
+            // Auto-Billing Trigger
+            // We'll search the catalog for a service matching the task name to get the price
+            const catalogItem = (await pool.query('SELECT price, service_code FROM service_catalog WHERE name_en ILIKE $1 OR name_ar ILIKE $1 LIMIT 1', [`%${task.task_name}%`])).rows[0];
+            const amount = catalogItem ? catalogItem.price : 100.00; // Default price if not found
+            const serviceCode = catalogItem ? catalogItem.service_code : 'GEN-001';
+
+            await pool.query(`
+                INSERT INTO billing_transactions (patient_id, order_id, task_id, service_code, amount, status)
+                VALUES ($1, $2, $3, $4, $5, 'Billed')
+            `, [task.patient_id, task.order_id || null, task.task_id, serviceCode, amount]);
+
             // Notify doctor
             // Assuming doctor ID is tied to the original order, but here we broadcast to a general doctor room or emit event
             emitClinicalAlert(task.patient_id, {
                 type: 'success',
                 time: 'الآن',
-                text: `✅ تم إنجاز المهمة: ${task.task_name} للمريض #${task.patient_id} بواسطة التمريض.`,
+                text: `✅ تم إنجاز المهمة: ${task.task_name} للمريض #${task.patient_id} بواسطة التمريض. (تم الفوترة)`,
                 taskId: task.task_id
             });
         }
